@@ -4,7 +4,8 @@ import {
   Route,
   Navigate
 } from "react-router-dom";
-
+import CreateProject from "../pages/CreateProject/CreateProject";
+import JoinRoom from "../pages/JoinRoom/JoinRoom";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
@@ -39,6 +40,15 @@ function AppRoutes() {
           path="/dashboard"
           element={<Dashboard />}
         />
+        <Route
+  path="/create-project"
+  element={<CreateProject />}
+/>
+
+<Route
+  path="/join-room"
+  element={<JoinRoom />}
+/>
 
       </Routes>
     </BrowserRouter>
