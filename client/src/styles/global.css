@@ -432,3 +432,31 @@ input {
   color: var(--accent);
   text-decoration: none;
 }
+
+.logout-btn {
+  padding: 8px 12px;
+
+  background: transparent;
+  color: var(--muted);
+
+  border: 1px solid var(--border);
+  border-radius: 7px;
+
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  color: var(--text);
+  background: var(--card);
+}
+
+.loading-screen {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--muted);
+  background: var(--bg);
+}
