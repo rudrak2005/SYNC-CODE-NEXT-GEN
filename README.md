@@ -278,3 +278,174 @@ Code Editor
                     ┌────────┼────────┐
                     ↓        ↓        ↓
                   User A   User B   User C
+
+
+
+                  User A
+  │
+  │ Offer
+  ↓
+Signaling Server
+  │
+  │ Offer
+  ↓
+User B
+  │
+  │ Answer
+  ↓
+Signaling Server
+  │
+  │ Answer
+  ↓
+User A
+
+# Day 11 — WebRTC Research & Feasibility
+
+## Objective
+
+Study WebRTC and determine how it can be integrated
+into SyncCode Next-Gen without breaking the existing
+Socket.IO collaboration baseline.
+
+## Topics
+
+- WebRTC
+- P2P communication
+- Signaling
+- SDP
+- ICE
+- STUN
+- TURN
+- RTCDataChannel
+- NAT traversal
+- Hybrid architecture
+
+## Current Baseline
+
+SyncCode currently uses:
+
+React
+Node.js
+Express
+MongoDB
+Socket.IO
+Monaco Editor
+
+## Proposed Direction
+
+Keep Socket.IO for:
+
+- Signaling
+- Presence
+- Room management
+- Fallback communication
+
+Evaluate WebRTC DataChannel for:
+
+- Peer-to-peer data transfer
+- Collaborative code updates
+- Potential latency reduction
+
+## Decision
+
+WebRTC will NOT replace Socket.IO completely.
+
+A hybrid architecture will be evaluated.
+
+## Status
+
+Research completed.
+Implementation deferred to later experimentation.
+
+
+Browser
+   │
+   ├──────── Socket.IO ────────┐
+   │                           │
+   │                     Existing sync
+   │
+   └──────── Yjs ──────────────┐
+                               │
+                            Y.Doc
+                               │
+                            Y.Text
+
+
+
+
+                            # SyncCode - Day 12
+
+## Date
+2026-08-16
+
+## Goal
+Introduce Yjs as the foundation for CRDT-based collaboration.
+
+## Topics Learned
+- Yjs
+- Y.Doc
+- Y.Text
+- Document state
+- Change observers
+- CRDT foundation
+- Distributed document model
+
+## Features Implemented
+- [x] Yjs installed
+- [x] Y.Doc created
+- [x] Y.Text created
+- [x] Text insertion tested
+- [x] Change observer tested
+- [x] Yjs isolated from Socket.IO baseline
+- [x] Research documentation
+
+## Files Added
+client/src/lib/collaboration/yjsDocument.js
+research/day-12-yjs/README.md
+
+## Files Updated
+client/package.json
+client/package-lock.json
+
+## Files Replaced
+None
+
+## Existing Features Preserved
+- Authentication
+- Rooms
+- Monaco Editor
+- Socket.IO collaboration
+- Presence
+- Room isolation
+
+## Testing
+- [x] Yjs installation
+- [x] Y.Doc
+- [x] Y.Text
+- [x] Observer
+- [x] Existing Day 10 tests
+
+## Result
+Yjs successfully introduced as an isolated
+collaboration document layer.
+
+## Progress
+Day 12 / 45
+
+## Commit
+Day 12: introduce Yjs collaboration foundation
+
+## Next Day
+Day 13 — CRDT Document Model
+
+A replica                 B replica
+    │                         │
+    │ local change            │ local change
+    ▼                         ▼
+   CRDT                      CRDT
+    │                         │
+    └──────── updates ────────┘
+              ↓
+       deterministic merge
+              ↓
+       converged state

@@ -4,10 +4,14 @@ import {
   useState
 } from "react";
 
+
+
+
 import {
   Link,
   useParams
 } from "react-router-dom";
+
 
 import CodeEditor
   from "../../components/CodeEditor/CodeEditor";
@@ -112,6 +116,7 @@ function Editor() {
     if (!user || !roomId) {
       return;
     }
+
 
 
     const handleCodeUpdate = ({
@@ -316,6 +321,9 @@ function Editor() {
               value={currentFile.content}
               language={currentFile.language}
               onChange={handleCodeChange}
+               socket={socket}
+  user={user}
+  fileName={activeFile}
             />
 
           </div>
