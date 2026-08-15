@@ -460,3 +460,401 @@ input {
   color: var(--muted);
   background: var(--bg);
 }
+
+
+.room-id-box {
+  margin: 25px 0;
+  padding: 18px;
+
+  text-align: center;
+
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.room-page {
+  min-height: 100vh;
+}
+
+.room-header {
+  height: 70px;
+  padding: 0 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.room-header a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.room-id {
+  margin-left: 12px;
+  color: var(--accent);
+  font-family: monospace;
+}
+
+.room-lobby {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 60px 25px;
+}
+
+.room-welcome {
+  text-align: center;
+}
+
+.room-welcome p {
+  color: var(--muted);
+}
+
+.room-info {
+  margin-top: 50px;
+}
+
+.member-card {
+  margin-top: 20px;
+  padding: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.member-card div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-card span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+
+.editor-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.editor-header {
+  height: 54px;
+  padding: 0 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #181818;
+  border-bottom: 1px solid #333;
+}
+
+.editor-back {
+  color: #aaa;
+  text-decoration: none;
+}
+
+.editor-room-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editor-room-info strong {
+  color: #fff;
+}
+
+.editor-room-info span {
+  color: #888;
+  font-family: monospace;
+}
+
+.save-button {
+  padding: 7px 14px;
+
+  border: 1px solid #444;
+  border-radius: 6px;
+
+  background: #252525;
+  color: #fff;
+
+  cursor: pointer;
+}
+
+.editor-layout {
+  flex: 1;
+
+  display: flex;
+
+  min-height: 0;
+}
+
+.file-explorer {
+  width: 220px;
+
+  background: #181818;
+  border-right: 1px solid #333;
+}
+
+.explorer-header {
+  padding: 14px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #888;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-item {
+  width: 100%;
+  padding: 8px 14px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  border: 0;
+  background: transparent;
+
+  color: #aaa;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-item:hover,
+.file-item.active {
+  background: #252525;
+  color: #fff;
+}
+
+.file-icon {
+  width: 20px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  color: #aaa;
+}
+
+.editor-main {
+  flex: 1;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.file-tabs {
+  height: 40px;
+
+  display: flex;
+
+  background: #181818;
+  border-bottom: 1px solid #333;
+
+  overflow-x: auto;
+}
+
+.file-tab {
+  padding: 0 18px;
+
+  border: 0;
+  border-right: 1px solid #333;
+
+  background: #181818;
+  color: #888;
+
+  cursor: pointer;
+}
+
+.file-tab.active {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+.editor-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.editor-header {
+  height: 54px;
+  padding: 0 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #181818;
+  border-bottom: 1px solid #333;
+}
+
+.editor-back {
+  color: #aaa;
+  text-decoration: none;
+}
+
+.editor-room-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editor-room-info strong {
+  color: #fff;
+}
+
+.editor-room-info span {
+  color: #888;
+  font-family: monospace;
+}
+
+.save-button {
+  padding: 7px 14px;
+
+  border: 1px solid #444;
+  border-radius: 6px;
+
+  background: #252525;
+  color: #fff;
+
+  cursor: pointer;
+}
+
+.editor-layout {
+  flex: 1;
+
+  display: flex;
+
+  min-height: 0;
+}
+
+.file-explorer {
+  width: 220px;
+
+  background: #181818;
+  border-right: 1px solid #333;
+}
+
+.explorer-header {
+  padding: 14px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #888;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-item {
+  width: 100%;
+  padding: 8px 14px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  border: 0;
+  background: transparent;
+
+  color: #aaa;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-item:hover,
+.file-item.active {
+  background: #252525;
+  color: #fff;
+}
+
+.file-icon {
+  width: 20px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  color: #aaa;
+}
+
+.editor-main {
+  flex: 1;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.file-tabs {
+  height: 40px;
+
+  display: flex;
+
+  background: #181818;
+  border-bottom: 1px solid #333;
+
+  overflow-x: auto;
+}
+
+.file-tab {
+  padding: 0 18px;
+
+  border: 0;
+  border-right: 1px solid #333;
+
+  background: #181818;
+  color: #888;
+
+  cursor: pointer;
+}
+
+.file-tab.active {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+.editor-container {
+  flex: 1;
+  min-height: 0;
+}

@@ -4,13 +4,14 @@ import {
   Route,
   Navigate
 } from "react-router-dom";
-
+import Room from "../pages/Room/Room";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import CreateProject from "../pages/CreateProject/CreateProject";
 import JoinRoom from "../pages/JoinRoom/JoinRoom";
+import Editor from "../pages/Editor/Editor";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -18,6 +19,24 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+
+<Route
+  path="/room/:roomId"
+  element={
+    <ProtectedRoute>
+      <Room />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/room/:roomId/editor"
+  element={
+    <ProtectedRoute>
+      <Editor />
+    </ProtectedRoute>
+  }
+/>
+
 
         <Route
           path="/"
