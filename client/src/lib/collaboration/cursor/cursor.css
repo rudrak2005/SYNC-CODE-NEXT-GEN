@@ -1,0 +1,13 @@
+.sync-code-remote-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 18px;
+  margin-left: -1px;
+  vertical-align: middle;
+  background: #00e5ff;
+  pointer-events: none;
+}
+
+.monaco-editor .sync-code-remote-cursor {
+  position: relative;
+}

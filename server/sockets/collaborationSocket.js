@@ -6,6 +6,9 @@ const initializeCollaboration = (io) => {
       `Socket connected: ${socket.id}`
     );
 
+    // =========================
+    // ROOM JOIN
+    // =========================
     socket.on("room:join", ({ roomId, user }) => {
       if (!roomId) {
         return;
@@ -54,6 +57,10 @@ const initializeCollaboration = (io) => {
       );
     });
 
+
+    // =========================
+    // CODE CHANGE
+    // =========================
     socket.on(
       "code:change",
       ({ roomId, fileName, code }) => {
@@ -74,24 +81,66 @@ const initializeCollaboration = (io) => {
       }
     );
 
+
+    // =========================
+    // CURSOR MOVE
+    // =========================
+    socket.on(
+      "cursor:move",
+      (cursor) => {
+
+        const roomId =
+          socket.roomId;
+
+        if (!roomId) {
+          return;
+        }
+
+        console.log(
+          "CURSOR RECEIVED:",
+          cursor
+        );
+
+        socket.to(roomId).emit(
+          "cursor:update",
+          cursor
+        );
+      }
+    );
+
+
+    // =========================
+    // ROOM LEAVE
+    // =========================
     socket.on("room:leave", () => {
       handleDisconnect(socket, io);
     });
 
+
+    // =========================
+    // DISCONNECT
+    // =========================
     socket.on("disconnect", () => {
       handleDisconnect(socket, io);
     });
   });
 };
 
+
+// =================================
+// HANDLE DISCONNECT
+// =================================
 const handleDisconnect = (socket, io) => {
-  const roomId = socket.roomId;
+
+  const roomId =
+    socket.roomId;
 
   if (!roomId) {
     return;
   }
 
-  const users = roomUsers.get(roomId);
+  const users =
+    roomUsers.get(roomId);
 
   if (!users) {
     return;
@@ -110,7 +159,9 @@ const handleDisconnect = (socket, io) => {
   io.to(roomId).emit(
     "room:users",
     {
-      users: Array.from(users.values())
+      users: Array.from(
+        users.values()
+      )
     }
   );
 
@@ -120,5 +171,6 @@ const handleDisconnect = (socket, io) => {
 
   socket.leave(roomId);
 };
+
 
 module.exports = initializeCollaboration;
