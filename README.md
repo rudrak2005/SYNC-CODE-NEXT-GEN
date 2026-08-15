@@ -259,3 +259,22 @@ Code Editor
   ├── Monaco Editor
   ├── Language
   └── Save
+
+
+
+
+
+
+
+                   Express API
+                     │
+             ┌───────┴───────┐
+             ↓               ↓
+        REST Routes       Socket.IO
+             │               │
+             ↓               ↓
+         MongoDB          Rooms
+                             │
+                    ┌────────┼────────┐
+                    ↓        ↓        ↓
+                  User A   User B   User C
