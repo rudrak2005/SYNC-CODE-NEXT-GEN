@@ -858,3 +858,54 @@ input {
   flex: 1;
   min-height: 0;
 }
+
+
+.user-list {
+  width: 220px;
+
+  background: #181818;
+  border-left: 1px solid #333;
+
+  overflow-y: auto;
+}
+
+.user-list-header {
+  padding: 14px;
+
+  color: #888;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.user-item {
+  padding: 10px 14px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  color: #ccc;
+}
+
+.user-item .avatar {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #333;
+  color: #fff;
+
+  font-size: 12px;
+}
+
+.online-dot {
+  margin-left: auto;
+  font-size: 10px;
+}
