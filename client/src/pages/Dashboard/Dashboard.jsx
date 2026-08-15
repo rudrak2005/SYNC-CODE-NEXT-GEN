@@ -33,6 +33,11 @@ function Dashboard() {
                 </Button>
               </Link>
 
+<Link to="/create-project">
+  <Button>
+    + Create Room
+  </Button>
+</Link>
               <Link to="/join-room">
                 <button className="secondary-btn">
                   Join Room

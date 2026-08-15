@@ -153,3 +153,109 @@ localStorage
     ↓
 Dashboard
 
+
+
+Dashboard
+   ↓
+Create Room / Create Project
+   ↓
+Room details
+   ↓
+MongoDB
+   ↓
+Unique Room ID
+   ↓
+Room created
+
+
+                    Dashboard
+                       │
+                 Create Project
+                       │
+                       ▼
+                Create Room Form
+                       │
+                 Project Name
+                       │
+                       ▼
+                POST /api/rooms
+                       │
+                       ▼
+                    Express
+                       │
+                       ▼
+                    MongoDB
+                       │
+                       ▼
+                 Unique Room ID
+                       │
+                       ▼
+                Room Created Page
+
+                                    Dashboard
+                       │
+                 Create Project
+                       │
+                       ▼
+                Create Room Form
+                       │
+                 Project Name
+                       │
+                       ▼
+                POST /api/rooms
+                       │
+                       ▼
+                    Express
+                       │
+                       ▼
+                    MongoDB
+                       │
+                       ▼
+                 Unique Room ID
+                       │
+                       ▼
+                Room Created Page
+
+
+
+User A
+  │
+  ├── Create Room
+  │
+  ▼
+SC-A72F9B31
+  │
+  │
+  ├─────────────────────┐
+  │                     │
+  ▼                     ▼
+User A                User B
+Owner                  Join Room
+                         │
+                         ▼
+                 POST /rooms/:id/join
+                         │
+                         ▼
+                      MongoDB
+                         │
+                         ▼
+                     Participant
+                         │
+                         ▼
+                     Room Lobby
+                
+
+
+
+Login
+  ↓
+Dashboard
+  ↓
+Room
+  ↓
+Code Editor
+  ├── File Explorer
+  ├── File Tabs
+  ├── Monaco Editor
+  ├── Language
+  └── Save

@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 dotenv.config();
+const roomRoutes = require("./routes/roomRoutes");
 
 console.log("MONGO_URI loaded:", !!process.env.MONGO_URI);
 
@@ -27,6 +28,7 @@ app.use("/api/health", healthRoutes);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/rooms", roomRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

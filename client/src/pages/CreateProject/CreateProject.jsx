@@ -1,10 +1,47 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import Button from "../../components/Button/Button";
-import Input from "../../components/Input/Input";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../../services/api";
 
 function CreateProject() {
-  const [projectName, setProjectName] = useState("");
+  const navigate = useNavigate();
+
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const token = localStorage.getItem("token");
+
+      const response = await api.post(
+        "/rooms",
+        {
+          name
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const room = response.data.room;
+
+      navigate(`/room/${room.roomId}`);
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+        "Failed to create room"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="form-page">
@@ -15,36 +52,44 @@ function CreateProject() {
           ← Dashboard
         </Link>
 
-        <h1>Create Project</h1>
+        <h1>Create Room</h1>
 
         <p>
-          Create a new collaborative development workspace.
+          Create a collaborative coding room.
         </p>
 
-        <label>
-          Project Name
-        </label>
+        {error && (
+          <p className="error-message">
+            {error}
+          </p>
+        )}
 
-        <Input
-          placeholder="Enter project name"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-        />
+        <form onSubmit={handleSubmit}>
 
-        <label>
-          Programming Language
-        </label>
+          <label>
+            Room Name
+          </label>
 
-        <select className="input-field">
-          <option>JavaScript</option>
-          <option>Python</option>
-          <option>C++</option>
-          <option>Rust</option>
-        </select>
+          <input
+            className="input-field"
+            type="text"
+            placeholder="My Coding Room"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
 
-        <Button type="button">
-          Create Project
-        </Button>
+          <button
+            className="primary-btn"
+            type="submit"
+            disabled={loading}
+          >
+            {loading
+              ? "Creating..."
+              : "Create Room"}
+          </button>
+
+        </form>
 
       </div>
 
