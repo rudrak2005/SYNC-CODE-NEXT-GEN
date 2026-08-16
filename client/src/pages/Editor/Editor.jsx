@@ -4,14 +4,14 @@ import {
   useState
 } from "react";
 
-
-
+import {
+  getLanguageFromFileName
+} from "../../utils/fileLanguage";
 
 import {
   Link,
   useParams
 } from "react-router-dom";
-
 
 import CodeEditor
   from "../../components/CodeEditor/CodeEditor";
@@ -76,6 +76,7 @@ function Editor() {
 
   const { user } = useAuth();
 
+
   const [files, setFiles] =
     useState(initialFiles);
 
@@ -90,19 +91,196 @@ function Editor() {
     files[activeFile];
 
 
+  /*
+   * FILE CREATE
+   */
+  const handleCreateFile = (fileName) => {
+
+    const name =
+      fileName.trim();
+
+    if (!name) {
+      return;
+    }
+
+    if (files[name]) {
+      window.alert(
+        "A file with this name already exists."
+      );
+
+      return;
+    }
+
+    const language =
+      getLanguageFromFileName(name);
+
+    setFiles((previousFiles) => ({
+      ...previousFiles,
+
+      [name]: {
+        language,
+        content: ""
+      }
+    }));
+
+    setActiveFile(name);
+  };
+
+
+  /*
+   * FILE DELETE
+   */
+  const handleDeleteFile = (fileName) => {
+
+    const fileNames =
+      Object.keys(files);
+
+    if (fileNames.length <= 1) {
+      window.alert(
+        "At least one file must remain."
+      );
+
+      return;
+    }
+
+    const updatedFiles = {
+      ...files
+    };
+
+    delete updatedFiles[fileName];
+
+    setFiles(updatedFiles);
+
+
+    if (activeFile === fileName) {
+
+      const remainingFiles =
+        Object.keys(updatedFiles);
+
+      setActiveFile(
+        remainingFiles[0] || ""
+      );
+    }
+  };
+
+
+  /*
+   * FILE RENAME
+   */
+  const handleRenameFile = (
+    oldFileName,
+    newFileName
+  ) => {
+
+    const newName =
+      newFileName.trim();
+
+    if (!newName) {
+      return;
+    }
+
+    if (oldFileName === newName) {
+      return;
+    }
+
+    if (files[newName]) {
+      window.alert(
+        "A file with this name already exists."
+      );
+
+      return;
+    }
+
+    const oldFile =
+      files[oldFileName];
+
+    if (!oldFile) {
+      return;
+    }
+
+    const updatedFiles = {
+      ...files
+    };
+
+    delete updatedFiles[oldFileName];
+
+    updatedFiles[newName] = {
+      ...oldFile,
+
+      language:
+        getLanguageFromFileName(
+          newName
+        )
+    };
+
+    setFiles(updatedFiles);
+
+
+    if (activeFile === oldFileName) {
+      setActiveFile(newName);
+    }
+  };
+
+
+  /*
+   * FILE LIST
+   */
   const fileList = useMemo(() => {
 
     return Object.keys(files).map(
-      (name) => ({
-        name,
+      (name) => {
 
-        icon:
-          name.endsWith(".js")
-            ? "JS"
-            : name.endsWith(".html")
-            ? "HT"
-            : "CS"
-      })
+        let icon = "TXT";
+
+
+        if (
+          name.endsWith(".js") ||
+          name.endsWith(".jsx")
+        ) {
+          icon = "JS";
+
+        } else if (
+          name.endsWith(".html")
+        ) {
+          icon = "HT";
+
+        } else if (
+          name.endsWith(".css")
+        ) {
+          icon = "CS";
+
+        } else if (
+          name.endsWith(".py")
+        ) {
+          icon = "PY";
+
+        } else if (
+          name.endsWith(".json")
+        ) {
+          icon = "JSON";
+
+        } else if (
+          name.endsWith(".cpp")
+        ) {
+          icon = "C++";
+
+        } else if (
+          name.endsWith(".c")
+        ) {
+          icon = "C";
+
+        } else if (
+          name.endsWith(".md")
+        ) {
+          icon = "MD";
+        }
+
+
+        return {
+          name,
+          icon
+        };
+      }
     );
 
   }, [files]);
@@ -116,7 +294,6 @@ function Editor() {
     if (!user || !roomId) {
       return;
     }
-
 
 
     const handleCodeUpdate = ({
@@ -138,9 +315,7 @@ function Editor() {
             content: code
           }
         };
-
       });
-
     };
 
 
@@ -149,21 +324,23 @@ function Editor() {
     }) => {
 
       setOnlineUsers(users);
-
     };
 
 
     socket.connect();
 
 
-    socket.emit("room:join", {
-      roomId,
+    socket.emit(
+      "room:join",
+      {
+        roomId,
 
-      user: {
-        id: user.id,
-        name: user.name
+        user: {
+          id: user.id,
+          name: user.name
+        }
       }
-    });
+    );
 
 
     socket.on(
@@ -195,7 +372,6 @@ function Editor() {
       );
 
       socket.disconnect();
-
     };
 
   }, [roomId, user]);
@@ -206,7 +382,8 @@ function Editor() {
    */
   const handleCodeChange = (value) => {
 
-    const newCode = value || "";
+    const newCode =
+      value || "";
 
 
     setFiles((previousFiles) => ({
@@ -216,20 +393,17 @@ function Editor() {
         ...previousFiles[activeFile],
         content: newCode
       }
-
     }));
 
 
-    socket.emit("code:change", {
-
-      roomId,
-
-      fileName: activeFile,
-
-      code: newCode
-
-    });
-
+    socket.emit(
+      "code:change",
+      {
+        roomId,
+        fileName: activeFile,
+        code: newCode
+      }
+    );
   };
 
 
@@ -237,6 +411,10 @@ function Editor() {
    * SAVE
    */
   const handleSave = () => {
+
+    if (!currentFile) {
+      return;
+    }
 
     localStorage.setItem(
       `synccode-${roomId}-${activeFile}`,
@@ -247,10 +425,12 @@ function Editor() {
       "Saved:",
       activeFile
     );
-
   };
 
 
+  /*
+   * RENDER
+   */
   return (
 
     <div className="editor-page">
@@ -261,28 +441,8 @@ function Editor() {
           to={`/room/${roomId}`}
           className="editor-back"
         >
-          ← Room
+          ← {onlineUsers.length} Online
         </Link>
-
-
-        <div className="editor-room-info">
-
-          <strong>
-            SyncCode
-          </strong>
-
-          <span>
-            {roomId}
-          </span>
-
-        </div>
-
-
-        <div className="online-users">
-
-          ● {onlineUsers.length} Online
-
-        </div>
 
 
         <button
@@ -297,16 +457,17 @@ function Editor() {
 
       <div className="editor-layout">
 
-
         <FileExplorer
           files={fileList}
           activeFile={activeFile}
           onFileSelect={setActiveFile}
+          onCreateFile={handleCreateFile}
+          onDeleteFile={handleDeleteFile}
+          onRenameFile={handleRenameFile}
         />
 
 
         <section className="editor-main">
-
 
           <FileTabs
             files={fileList}
@@ -317,33 +478,39 @@ function Editor() {
 
           <div className="editor-container">
 
-            <CodeEditor
-              value={currentFile.content}
-              language={currentFile.language}
-              onChange={handleCodeChange}
-               socket={socket}
-  user={user}
-  fileName={activeFile}
-            />
+            {currentFile ? (
+
+              <CodeEditor
+                value={currentFile.content}
+                language={currentFile.language}
+                onChange={handleCodeChange}
+                socket={socket}
+                user={user}
+                fileName={activeFile}
+              />
+
+            ) : (
+
+              <div className="empty-files">
+                No file selected
+              </div>
+
+            )}
 
           </div>
-
 
         </section>
 
 
         <UserList
-  users={onlineUsers}
-  currentUser={user}
-/>
-
+          users={onlineUsers}
+          currentUser={user}
+        />
 
       </div>
 
     </div>
-
   );
-
 }
 
 
