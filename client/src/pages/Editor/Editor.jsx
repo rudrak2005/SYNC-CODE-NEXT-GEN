@@ -333,8 +333,9 @@ function Editor() {
 
 
         <UserList
-          users={onlineUsers}
-        />
+  users={onlineUsers}
+  currentUser={user}
+/>
 
 
       </div>
