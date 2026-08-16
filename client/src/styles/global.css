@@ -909,3 +909,67 @@ input {
   margin-left: auto;
   font-size: 10px;
 }
+
+
+
+
+/* Day 16 - File Explorer Actions */
+
+.explorer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.new-file-button {
+  border: 0;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 2px 6px;
+}
+
+.new-file-button:hover {
+  color: #fff;
+}
+
+.file-item-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.file-item-wrapper .file-item {
+  flex: 1;
+}
+
+.file-actions {
+  display: flex;
+  gap: 2px;
+  padding-right: 6px;
+}
+
+.file-actions button {
+  border: 0;
+  background: transparent;
+  color: #777;
+  cursor: pointer;
+  opacity: 0;
+  padding: 2px 4px;
+}
+
+.file-item-wrapper:hover
+.file-actions button {
+  opacity: 1;
+}
+
+.file-actions button:hover {
+  color: #fff;
+}
+
+.empty-files {
+  padding: 12px;
+  color: #777;
+  font-size: 13px;
+}
