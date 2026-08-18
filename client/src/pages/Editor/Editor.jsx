@@ -30,6 +30,8 @@ import socket
 
 import { useAuth }
   from "../../context/AuthContext";
+  import api
+  from "../../services/api";
 
 
 const initialFiles = {
@@ -405,8 +407,105 @@ function Editor() {
     if (!user || !roomId) {
       return;
     }
+const loadProject = async () => {
+
+  try {
+
+    console.log(
+      "Loading project:",
+      roomId
+    );
 
 
+    const response =
+      await api.get(
+        `/projects/${roomId}`
+      );
+
+
+    const project =
+      response.data?.project;
+
+
+    if (
+      !project ||
+      !Array.isArray(project.files) ||
+      project.files.length === 0
+    ) {
+
+      console.log(
+        "No saved project found."
+      );
+
+      return;
+    }
+
+
+    const loadedFiles = {};
+
+
+    project.files.forEach(
+      (file) => {
+
+        if (!file?.name) {
+          return;
+        }
+
+
+        loadedFiles[file.name] = {
+
+          language:
+            file.language ||
+            "plaintext",
+
+          content:
+            file.content || ""
+        };
+      }
+    );
+
+
+    if (
+      Object.keys(loadedFiles).length > 0
+    ) {
+
+      setFiles(loadedFiles);
+
+
+      /*
+       * Select first saved file
+       */
+
+      const firstFile =
+        Object.keys(
+          loadedFiles
+        )[0];
+
+
+      setActiveFile(
+        firstFile
+      );
+
+
+      console.log(
+        "✅ Project loaded:",
+        Object.keys(loadedFiles)
+      );
+    }
+
+  } catch (error) {
+
+    console.error(
+      "❌ Project load error:",
+      error
+    );
+
+    console.error(
+      "Server response:",
+      error.response?.data
+    );
+  }
+};
     /*
      * ----------------------------------------
      * CODE UPDATE
@@ -628,7 +727,7 @@ function Editor() {
      * CONNECT
      * ----------------------------------------
      */
-
+loadProject();
     socket.connect();
 
 
@@ -776,32 +875,131 @@ function Editor() {
     );
   };
 
+const saveProjectToServer = async () => {
+
+  try {
+
+    const projectFiles =
+      Object.entries(files).map(
+        ([name, file]) => ({
+          name,
+          language:
+            file.language ||
+            "plaintext",
+          content:
+            file.content || ""
+        })
+      );
+
+
+    const response =
+      await api.put(
+        `/projects/${roomId}`,
+        {
+          files: projectFiles
+        }
+      );
+
+
+    if (response.data.success) {
+
+      console.log(
+        "Project saved successfully"
+      );
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Project save failed:",
+      error
+    );
+  }
+};
+
 
   /*
    * ========================================
    * SAVE
    * ========================================
    */
+const handleSave = async () => {
 
-  const handleSave = () => {
+  try {
 
-    if (!currentFile) {
+    if (!roomId) {
       return;
     }
 
 
-    localStorage.setItem(
-      `synccode-${roomId}-${activeFile}`,
-      currentFile.content
-    );
+    const projectFiles =
+      Object.entries(files).map(
+        ([name, file]) => ({
+          name,
+
+          language:
+            file.language ||
+            "plaintext",
+
+          content:
+            file.content || ""
+        })
+      );
 
 
     console.log(
-      "Saved:",
-      activeFile
+      "Saving project:",
+      projectFiles
     );
-  };
 
+
+    const response =
+      await api.put(
+        `/projects/${roomId}`,
+        {
+          files: projectFiles
+        }
+      );
+
+
+    if (response.data?.success) {
+
+      console.log(
+        "✅ Project saved to MongoDB"
+      );
+
+      window.alert(
+        "Project saved successfully!"
+      );
+
+    } else {
+
+      console.error(
+        "Project save failed:",
+        response.data
+      );
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "❌ Project save error:",
+      error
+    );
+
+
+    console.error(
+      "Server response:",
+      error.response?.data
+    );
+
+
+    window.alert(
+      "Failed to save project."
+    );
+  }
+};
 
   /*
    * ========================================
