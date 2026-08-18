@@ -92,8 +92,11 @@ function Editor() {
 
 
   /*
+   * ========================================
    * FILE CREATE
+   * ========================================
    */
+
   const handleCreateFile = (fileName) => {
 
     const name =
@@ -103,7 +106,9 @@ function Editor() {
       return;
     }
 
+
     if (files[name]) {
+
       window.alert(
         "A file with this name already exists."
       );
@@ -111,8 +116,17 @@ function Editor() {
       return;
     }
 
+
     const language =
       getLanguageFromFileName(name);
+
+
+    const newFile = {
+      name,
+      language,
+      content: ""
+    };
+
 
     setFiles((previousFiles) => ({
       ...previousFiles,
@@ -123,19 +137,39 @@ function Editor() {
       }
     }));
 
+
     setActiveFile(name);
+
+
+    /*
+     * Send file creation
+     * to other users
+     */
+
+    socket.emit(
+      "file:create",
+      {
+        roomId,
+        file: newFile
+      }
+    );
   };
 
 
   /*
+   * ========================================
    * FILE DELETE
+   * ========================================
    */
+
   const handleDeleteFile = (fileName) => {
 
     const fileNames =
       Object.keys(files);
 
+
     if (fileNames.length <= 1) {
+
       window.alert(
         "At least one file must remain."
       );
@@ -143,14 +177,22 @@ function Editor() {
       return;
     }
 
+
     const updatedFiles = {
       ...files
     };
 
+
     delete updatedFiles[fileName];
+
 
     setFiles(updatedFiles);
 
+
+    /*
+     * If deleted file was active,
+     * select another file.
+     */
 
     if (activeFile === fileName) {
 
@@ -161,12 +203,28 @@ function Editor() {
         remainingFiles[0] || ""
       );
     }
+
+
+    /*
+     * Send delete event
+     */
+
+    socket.emit(
+      "file:delete",
+      {
+        roomId,
+        fileName
+      }
+    );
   };
 
 
   /*
+   * ========================================
    * FILE RENAME
+   * ========================================
    */
+
   const handleRenameFile = (
     oldFileName,
     newFileName
@@ -175,15 +233,19 @@ function Editor() {
     const newName =
       newFileName.trim();
 
+
     if (!newName) {
       return;
     }
+
 
     if (oldFileName === newName) {
       return;
     }
 
+
     if (files[newName]) {
+
       window.alert(
         "A file with this name already exists."
       );
@@ -191,40 +253,78 @@ function Editor() {
       return;
     }
 
+
     const oldFile =
       files[oldFileName];
+
 
     if (!oldFile) {
       return;
     }
 
-    const updatedFiles = {
-      ...files
-    };
 
-    delete updatedFiles[oldFileName];
-
-    updatedFiles[newName] = {
-      ...oldFile,
+    const newFile = {
+      name: newName,
 
       language:
         getLanguageFromFileName(
           newName
-        )
+        ),
+
+      content:
+        oldFile.content || ""
     };
+
+
+    const updatedFiles = {
+      ...files
+    };
+
+
+    delete updatedFiles[oldFileName];
+
+
+    updatedFiles[newName] = {
+      language: newFile.language,
+      content: newFile.content
+    };
+
 
     setFiles(updatedFiles);
 
 
+    /*
+     * Keep renamed file active
+     */
+
     if (activeFile === oldFileName) {
       setActiveFile(newName);
     }
+
+
+    /*
+     * Send rename event
+     */
+
+    socket.emit(
+      "file:rename",
+      {
+        roomId,
+
+        oldFileName,
+
+        newFile
+      }
+    );
   };
 
 
   /*
+   * ========================================
    * FILE LIST
+   * ========================================
    */
+
   const fileList = useMemo(() => {
 
     return Object.keys(files).map(
@@ -237,41 +337,49 @@ function Editor() {
           name.endsWith(".js") ||
           name.endsWith(".jsx")
         ) {
+
           icon = "JS";
 
         } else if (
           name.endsWith(".html")
         ) {
+
           icon = "HT";
 
         } else if (
           name.endsWith(".css")
         ) {
+
           icon = "CS";
 
         } else if (
           name.endsWith(".py")
         ) {
+
           icon = "PY";
 
         } else if (
           name.endsWith(".json")
         ) {
+
           icon = "JSON";
 
         } else if (
           name.endsWith(".cpp")
         ) {
+
           icon = "C++";
 
         } else if (
           name.endsWith(".c")
         ) {
+
           icon = "C";
 
         } else if (
           name.endsWith(".md")
         ) {
+
           icon = "MD";
         }
 
@@ -287,14 +395,23 @@ function Editor() {
 
 
   /*
+   * ========================================
    * SOCKET CONNECTION
+   * ========================================
    */
+
   useEffect(() => {
 
     if (!user || !roomId) {
       return;
     }
 
+
+    /*
+     * ----------------------------------------
+     * CODE UPDATE
+     * ----------------------------------------
+     */
 
     const handleCodeUpdate = ({
       fileName,
@@ -307,17 +424,196 @@ function Editor() {
           return previousFiles;
         }
 
+
         return {
           ...previousFiles,
 
           [fileName]: {
             ...previousFiles[fileName],
+
             content: code
           }
         };
       });
     };
 
+
+    /*
+     * ----------------------------------------
+     * FILE CREATED
+     * ----------------------------------------
+     */
+
+    const handleFileCreated = ({
+      file
+    }) => {
+
+      if (!file?.name) {
+        return;
+      }
+
+
+      setFiles((previousFiles) => {
+
+        /*
+         * Don't create duplicate
+         */
+
+        if (previousFiles[file.name]) {
+          return previousFiles;
+        }
+
+
+        return {
+          ...previousFiles,
+
+          [file.name]: {
+            language:
+              file.language ||
+              "plaintext",
+
+            content:
+              file.content || ""
+          }
+        };
+      });
+    };
+
+
+    /*
+     * ----------------------------------------
+     * FILE DELETED
+     * ----------------------------------------
+     */
+
+    const handleFileDeleted = ({
+      fileName
+    }) => {
+
+      if (!fileName) {
+        return;
+      }
+
+
+      setFiles((previousFiles) => {
+
+        if (!previousFiles[fileName]) {
+          return previousFiles;
+        }
+
+
+        const updatedFiles = {
+          ...previousFiles
+        };
+
+
+        delete updatedFiles[fileName];
+
+
+        return updatedFiles;
+      });
+
+
+      /*
+       * If remote user deleted our
+       * currently active file
+       */
+
+      setActiveFile((currentActiveFile) => {
+
+        if (
+          currentActiveFile !== fileName
+        ) {
+
+          return currentActiveFile;
+        }
+
+
+        return "main.js";
+      });
+    };
+
+
+    /*
+     * ----------------------------------------
+     * FILE RENAMED
+     * ----------------------------------------
+     */
+
+    const handleFileRenamed = ({
+      oldFileName,
+      newFile
+    }) => {
+
+      if (
+        !oldFileName ||
+        !newFile?.name
+      ) {
+        return;
+      }
+
+
+      setFiles((previousFiles) => {
+
+        if (!previousFiles[oldFileName]) {
+          return previousFiles;
+        }
+
+
+        const updatedFiles = {
+          ...previousFiles
+        };
+
+
+        const oldFile =
+          updatedFiles[oldFileName];
+
+
+        delete updatedFiles[oldFileName];
+
+
+        updatedFiles[newFile.name] = {
+          language:
+            newFile.language ||
+            oldFile.language ||
+            "plaintext",
+
+          content:
+            newFile.content ??
+            oldFile.content ??
+            ""
+        };
+
+
+        return updatedFiles;
+      });
+
+
+      /*
+       * Keep active file name in sync
+       */
+
+      setActiveFile((currentActiveFile) => {
+
+        if (
+          currentActiveFile ===
+          oldFileName
+        ) {
+
+          return newFile.name;
+        }
+
+
+        return currentActiveFile;
+      });
+    };
+
+
+    /*
+     * ----------------------------------------
+     * ONLINE USERS
+     * ----------------------------------------
+     */
 
     const handleUsers = ({
       users
@@ -327,8 +623,18 @@ function Editor() {
     };
 
 
+    /*
+     * ----------------------------------------
+     * CONNECT
+     * ----------------------------------------
+     */
+
     socket.connect();
 
+
+    /*
+     * Join room
+     */
 
     socket.emit(
       "room:join",
@@ -343,9 +649,33 @@ function Editor() {
     );
 
 
+    /*
+     * ----------------------------------------
+     * LISTENERS
+     * ----------------------------------------
+     */
+
     socket.on(
       "code:update",
       handleCodeUpdate
+    );
+
+
+    socket.on(
+      "file:created",
+      handleFileCreated
+    );
+
+
+    socket.on(
+      "file:deleted",
+      handleFileDeleted
+    );
+
+
+    socket.on(
+      "file:renamed",
+      handleFileRenamed
     );
 
 
@@ -355,6 +685,12 @@ function Editor() {
     );
 
 
+    /*
+     * ----------------------------------------
+     * CLEANUP
+     * ----------------------------------------
+     */
+
     return () => {
 
       socket.off(
@@ -362,14 +698,35 @@ function Editor() {
         handleCodeUpdate
       );
 
+
+      socket.off(
+        "file:created",
+        handleFileCreated
+      );
+
+
+      socket.off(
+        "file:deleted",
+        handleFileDeleted
+      );
+
+
+      socket.off(
+        "file:renamed",
+        handleFileRenamed
+      );
+
+
       socket.off(
         "room:users",
         handleUsers
       );
 
+
       socket.emit(
         "room:leave"
       );
+
 
       socket.disconnect();
     };
@@ -378,8 +735,11 @@ function Editor() {
 
 
   /*
+   * ========================================
    * LOCAL CODE CHANGE
+   * ========================================
    */
+
   const handleCodeChange = (value) => {
 
     const newCode =
@@ -387,20 +747,30 @@ function Editor() {
 
 
     setFiles((previousFiles) => ({
+
       ...previousFiles,
 
       [activeFile]: {
+
         ...previousFiles[activeFile],
+
         content: newCode
       }
+
     }));
 
+
+    /*
+     * Send code to other users
+     */
 
     socket.emit(
       "code:change",
       {
         roomId,
+
         fileName: activeFile,
+
         code: newCode
       }
     );
@@ -408,18 +778,23 @@ function Editor() {
 
 
   /*
+   * ========================================
    * SAVE
+   * ========================================
    */
+
   const handleSave = () => {
 
     if (!currentFile) {
       return;
     }
 
+
     localStorage.setItem(
       `synccode-${roomId}-${activeFile}`,
       currentFile.content
     );
+
 
     console.log(
       "Saved:",
@@ -429,8 +804,11 @@ function Editor() {
 
 
   /*
+   * ========================================
    * RENDER
+   * ========================================
    */
+
   return (
 
     <div className="editor-page">
@@ -457,22 +835,41 @@ function Editor() {
 
       <div className="editor-layout">
 
+
         <FileExplorer
           files={fileList}
+
           activeFile={activeFile}
-          onFileSelect={setActiveFile}
-          onCreateFile={handleCreateFile}
-          onDeleteFile={handleDeleteFile}
-          onRenameFile={handleRenameFile}
+
+          onFileSelect={
+            setActiveFile
+          }
+
+          onCreateFile={
+            handleCreateFile
+          }
+
+          onDeleteFile={
+            handleDeleteFile
+          }
+
+          onRenameFile={
+            handleRenameFile
+          }
         />
 
 
         <section className="editor-main">
 
+
           <FileTabs
             files={fileList}
+
             activeFile={activeFile}
-            onFileSelect={setActiveFile}
+
+            onFileSelect={
+              setActiveFile
+            }
           />
 
 
@@ -481,12 +878,25 @@ function Editor() {
             {currentFile ? (
 
               <CodeEditor
-                value={currentFile.content}
-                language={currentFile.language}
-                onChange={handleCodeChange}
+                value={
+                  currentFile.content
+                }
+
+                language={
+                  currentFile.language
+                }
+
+                onChange={
+                  handleCodeChange
+                }
+
                 socket={socket}
+
                 user={user}
-                fileName={activeFile}
+
+                fileName={
+                  activeFile
+                }
               />
 
             ) : (
@@ -504,6 +914,7 @@ function Editor() {
 
         <UserList
           users={onlineUsers}
+
           currentUser={user}
         />
 
