@@ -1,5 +1,12 @@
 const roomUsers = new Map();
 
+const {
+  saveFile,
+  deleteFile,
+  renameFile,
+  updateFileContent
+} = require("../services/projectService");
+
 
 const initializeCollaboration = (io) => {
 
@@ -63,7 +70,8 @@ const initializeCollaboration = (io) => {
         users.set(
           socket.id,
           {
-            socketId: socket.id,
+            socketId:
+              socket.id,
 
             userId:
               user?.id,
@@ -74,10 +82,6 @@ const initializeCollaboration = (io) => {
           }
         );
 
-
-        /*
-         * Notify other users
-         */
 
         socket
           .to(normalizedRoomId)
@@ -91,10 +95,6 @@ const initializeCollaboration = (io) => {
             }
           );
 
-
-        /*
-         * Send complete user list
-         */
 
         io
           .to(normalizedRoomId)
@@ -124,13 +124,16 @@ const initializeCollaboration = (io) => {
 
     socket.on(
       "code:change",
-      ({
+      async ({
         roomId,
         fileName,
         code
       }) => {
 
-        if (!roomId) {
+        if (
+          !roomId ||
+          !fileName
+        ) {
           return;
         }
 
@@ -138,6 +141,10 @@ const initializeCollaboration = (io) => {
         const normalizedRoomId =
           roomId.toUpperCase();
 
+
+        /*
+         * Send live update first.
+         */
 
         socket
           .to(normalizedRoomId)
@@ -148,6 +155,27 @@ const initializeCollaboration = (io) => {
               code
             }
           );
+
+
+        /*
+         * Save code to MongoDB.
+         */
+
+        try {
+
+          await updateFileContent(
+            normalizedRoomId,
+            fileName,
+            code
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Code persistence error:",
+            error.message
+          );
+        }
       }
     );
 
@@ -160,7 +188,7 @@ const initializeCollaboration = (io) => {
 
     socket.on(
       "file:create",
-      ({
+      async ({
         roomId,
         file
       }) => {
@@ -177,19 +205,43 @@ const initializeCollaboration = (io) => {
           roomId.toUpperCase();
 
 
-        socket
-          .to(normalizedRoomId)
-          .emit(
-            "file:created",
-            {
-              file
-            }
+        try {
+
+          /*
+           * Save file to MongoDB.
+           */
+
+          await saveFile(
+            normalizedRoomId,
+            file
           );
 
 
-        console.log(
-          `File created: ${file.name} in ${normalizedRoomId}`
-        );
+          /*
+           * Send to other users.
+           */
+
+          socket
+            .to(normalizedRoomId)
+            .emit(
+              "file:created",
+              {
+                file
+              }
+            );
+
+
+          console.log(
+            `File created and saved: ${file.name} in ${normalizedRoomId}`
+          );
+
+        } catch (error) {
+
+          console.error(
+            "File create persistence error:",
+            error.message
+          );
+        }
       }
     );
 
@@ -202,7 +254,7 @@ const initializeCollaboration = (io) => {
 
     socket.on(
       "file:delete",
-      ({
+      async ({
         roomId,
         fileName
       }) => {
@@ -219,19 +271,44 @@ const initializeCollaboration = (io) => {
           roomId.toUpperCase();
 
 
-        socket
-          .to(normalizedRoomId)
-          .emit(
-            "file:deleted",
-            {
-              fileName
-            }
+        try {
+
+          /*
+           * Delete from MongoDB.
+           */
+
+          await deleteFile(
+            normalizedRoomId,
+            fileName
           );
 
 
-        console.log(
-          `File deleted: ${fileName} in ${normalizedRoomId}`
-        );
+          /*
+           * Send delete event
+           * to other users.
+           */
+
+          socket
+            .to(normalizedRoomId)
+            .emit(
+              "file:deleted",
+              {
+                fileName
+              }
+            );
+
+
+          console.log(
+            `File deleted and saved: ${fileName} in ${normalizedRoomId}`
+          );
+
+        } catch (error) {
+
+          console.error(
+            "File delete persistence error:",
+            error.message
+          );
+        }
       }
     );
 
@@ -244,7 +321,7 @@ const initializeCollaboration = (io) => {
 
     socket.on(
       "file:rename",
-      ({
+      async ({
         roomId,
         oldFileName,
         newFile
@@ -263,20 +340,46 @@ const initializeCollaboration = (io) => {
           roomId.toUpperCase();
 
 
-        socket
-          .to(normalizedRoomId)
-          .emit(
-            "file:renamed",
-            {
-              oldFileName,
-              newFile
-            }
+        try {
+
+          /*
+           * Rename in MongoDB.
+           */
+
+          await renameFile(
+            normalizedRoomId,
+            oldFileName,
+            newFile
           );
 
 
-        console.log(
-          `File renamed: ${oldFileName} -> ${newFile.name} in ${normalizedRoomId}`
-        );
+          /*
+           * Send rename event
+           * to other users.
+           */
+
+          socket
+            .to(normalizedRoomId)
+            .emit(
+              "file:renamed",
+              {
+                oldFileName,
+                newFile
+              }
+            );
+
+
+          console.log(
+            `File renamed and saved: ${oldFileName} -> ${newFile.name} in ${normalizedRoomId}`
+          );
+
+        } catch (error) {
+
+          console.error(
+            "File rename persistence error:",
+            error.message
+          );
+        }
       }
     );
 
@@ -366,7 +469,9 @@ const handleDisconnect = (
 
 
   const users =
-    roomUsers.get(roomId);
+    roomUsers.get(
+      roomId
+    );
 
 
   if (!users) {
@@ -380,7 +485,7 @@ const handleDisconnect = (
 
 
   /*
-   * Notify other users
+   * Notify other users.
    */
 
   socket
@@ -398,7 +503,7 @@ const handleDisconnect = (
 
 
   /*
-   * Update user list
+   * Update user list.
    */
 
   io
@@ -415,10 +520,12 @@ const handleDisconnect = (
 
 
   /*
-   * Delete empty room
+   * Delete empty room.
    */
 
-  if (users.size === 0) {
+  if (
+    users.size === 0
+  ) {
 
     roomUsers.delete(
       roomId
@@ -432,9 +539,7 @@ const handleDisconnect = (
 
 
   /*
-   * Clear socket room
-   * so duplicate cleanup
-   * doesn't happen.
+   * Prevent duplicate cleanup.
    */
 
   socket.roomId =

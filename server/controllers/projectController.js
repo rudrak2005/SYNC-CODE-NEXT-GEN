@@ -121,6 +121,58 @@ const saveProject = async (
   }
 };
 
+const updateProjectFile = async (
+  roomId,
+  fileName,
+  updates
+) => {
+
+  const Project =
+    require("../models/Project");
+
+  const normalizedRoomId =
+    roomId.toUpperCase();
+
+
+  const project =
+    await Project.findOne({
+      roomId: normalizedRoomId
+    });
+
+
+  if (!project) {
+    return null;
+  }
+
+
+  const fileIndex =
+    project.files.findIndex(
+      (file) =>
+        file.name === fileName
+    );
+
+
+  if (fileIndex === -1) {
+    return null;
+  }
+
+
+  project.files[fileIndex] = {
+    ...project.files[fileIndex].toObject(),
+
+    ...updates
+  };
+
+
+  await project.save();
+
+  return project;
+};
+
+
+module.exports.updateProjectFile =
+  updateProjectFile;
+
 
 module.exports = {
   getProject,
