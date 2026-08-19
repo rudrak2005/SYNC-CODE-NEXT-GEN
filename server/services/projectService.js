@@ -80,7 +80,8 @@ const saveFile = async (
 
   const project =
     await getProject(roomId);
-
+project.revision += 1;
+await project.save();
 
   if (!project) {
 

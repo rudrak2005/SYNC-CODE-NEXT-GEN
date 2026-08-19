@@ -35,6 +35,11 @@ const projectSchema = new mongoose.Schema(
       trim: true
     },
 
+    revision: {
+  type: Number,
+  default: 0
+},
+
     files: {
       type: [fileSchema],
       default: []
