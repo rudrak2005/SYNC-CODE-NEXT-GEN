@@ -31,7 +31,6 @@ const initializeCollaboration = (io) => {
           return;
         }
 
-
         const normalizedRoomId =
           roomId.toUpperCase();
 
@@ -142,31 +141,42 @@ const initializeCollaboration = (io) => {
           roomId.toUpperCase();
 
 
-        /*
-         * Send live update first.
-         */
-
-        socket
-          .to(normalizedRoomId)
-          .emit(
-            "code:update",
-            {
-              fileName,
-              code
-            }
-          );
-
-
-        /*
-         * Save code to MongoDB.
-         */
-
         try {
 
-          await updateFileContent(
-            normalizedRoomId,
-            fileName,
-            code
+          /*
+           * Save code to MongoDB.
+           */
+
+          const project =
+            await updateFileContent(
+              normalizedRoomId,
+              fileName,
+              code
+            );
+
+
+          /*
+           * Send live update
+           * to other users.
+           */
+
+          socket
+            .to(normalizedRoomId)
+            .emit(
+              "code:update",
+              {
+                fileName,
+                code,
+                revision:
+                  project?.revision
+              }
+            );
+
+
+          console.log(
+            `Code updated: ${fileName} | revision: ${
+              project?.revision ?? "N/A"
+            }`
           );
 
         } catch (error) {
@@ -207,32 +217,30 @@ const initializeCollaboration = (io) => {
 
         try {
 
-          /*
-           * Save file to MongoDB.
-           */
+          const project =
+            await saveFile(
+              normalizedRoomId,
+              file
+            );
 
-          await saveFile(
-            normalizedRoomId,
-            file
-          );
-
-
-          /*
-           * Send to other users.
-           */
 
           socket
             .to(normalizedRoomId)
             .emit(
               "file:created",
               {
-                file
+                file,
+
+                revision:
+                  project?.revision
               }
             );
 
 
           console.log(
-            `File created and saved: ${file.name} in ${normalizedRoomId}`
+            `File created: ${file.name} | revision: ${
+              project?.revision ?? "N/A"
+            }`
           );
 
         } catch (error) {
@@ -273,33 +281,30 @@ const initializeCollaboration = (io) => {
 
         try {
 
-          /*
-           * Delete from MongoDB.
-           */
+          const project =
+            await deleteFile(
+              normalizedRoomId,
+              fileName
+            );
 
-          await deleteFile(
-            normalizedRoomId,
-            fileName
-          );
-
-
-          /*
-           * Send delete event
-           * to other users.
-           */
 
           socket
             .to(normalizedRoomId)
             .emit(
               "file:deleted",
               {
-                fileName
+                fileName,
+
+                revision:
+                  project?.revision
               }
             );
 
 
           console.log(
-            `File deleted and saved: ${fileName} in ${normalizedRoomId}`
+            `File deleted: ${fileName} | revision: ${
+              project?.revision ?? "N/A"
+            }`
           );
 
         } catch (error) {
@@ -342,21 +347,13 @@ const initializeCollaboration = (io) => {
 
         try {
 
-          /*
-           * Rename in MongoDB.
-           */
+          const project =
+            await renameFile(
+              normalizedRoomId,
+              oldFileName,
+              newFile
+            );
 
-          await renameFile(
-            normalizedRoomId,
-            oldFileName,
-            newFile
-          );
-
-
-          /*
-           * Send rename event
-           * to other users.
-           */
 
           socket
             .to(normalizedRoomId)
@@ -364,13 +361,18 @@ const initializeCollaboration = (io) => {
               "file:renamed",
               {
                 oldFileName,
-                newFile
+                newFile,
+
+                revision:
+                  project?.revision
               }
             );
 
 
           console.log(
-            `File renamed and saved: ${oldFileName} -> ${newFile.name} in ${normalizedRoomId}`
+            `File renamed: ${oldFileName} -> ${newFile.name} | revision: ${
+              project?.revision ?? "N/A"
+            }`
           );
 
         } catch (error) {
@@ -484,10 +486,6 @@ const handleDisconnect = (
   );
 
 
-  /*
-   * Notify other users.
-   */
-
   socket
     .to(roomId)
     .emit(
@@ -502,10 +500,6 @@ const handleDisconnect = (
     );
 
 
-  /*
-   * Update user list.
-   */
-
   io
     .to(roomId)
     .emit(
@@ -518,10 +512,6 @@ const handleDisconnect = (
       }
     );
 
-
-  /*
-   * Delete empty room.
-   */
 
   if (
     users.size === 0
@@ -537,10 +527,6 @@ const handleDisconnect = (
     roomId
   );
 
-
-  /*
-   * Prevent duplicate cleanup.
-   */
 
   socket.roomId =
     null;
