@@ -1,0 +1,28 @@
+.recovery-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #e5e7eb;
+  font-size: 13px;
+}
+
+.recovery-status button {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+}
+
+.recovery-status .discard-btn {
+  background: #374151;
+}
+
+.recovery-status.recovering {
+  justify-content: center;
+}

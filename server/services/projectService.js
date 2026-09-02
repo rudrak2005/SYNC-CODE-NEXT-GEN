@@ -217,42 +217,73 @@ const updateFileContent = async (
   code
 ) => {
 
-  const project =
-    await getProject(roomId);
+  const project = await Project.findOne({ roomId });
 
+  if (!project) return null;
 
-  if (!project) {
-    return null;
-  }
+  const file = project.files.find(
+    (f) => f.name === fileName
+  );
 
+  if (!file) return null;
 
-  const file =
-    project.files.find(
-      (item) =>
-        item.name === fileName
-    );
+  file.content = code;
 
-
-  if (!file) {
-    return null;
-  }
-
-
-  file.content =
-    code || "";
-
+  // ⭐ Day 21 Fix
+  project.revision += 1;
 
   await project.save();
 
   return project;
 };
 
+/*
+ * Return project using roomId.
+ */
 
-module.exports = {
-  getProject,
-  saveFiles,
+const getProjectByRoomId = async (
+  roomId
+) => {
+
+  return await Project.findOne({
+    roomId
+  });
+};
+
+/*
+ * Return project files + revision.
+ */
+
+const getLatestProjectState =
+  async (roomId) => {
+
+    const project =
+      await Project.findOne({
+        roomId
+      });
+
+    if (!project) {
+      return null;
+    }
+
+    return {
+      roomId:
+        project.roomId,
+
+      revision:
+        project.revision,
+
+      files:
+        project.files
+    };
+  };
+
+
+  module.exports = {
   saveFile,
   deleteFile,
   renameFile,
-  updateFileContent
+  updateFileContent,
+  getProjectByRoomId,
+  getLatestProjectState
 };

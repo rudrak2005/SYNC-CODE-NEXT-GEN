@@ -449,3 +449,6 @@ A replica                 B replica
        deterministic merge
               ↓
        converged state
+
+
+       

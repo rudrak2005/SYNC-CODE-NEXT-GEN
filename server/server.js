@@ -5,13 +5,14 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
-
+const versionRoutes = require("./routes/versionRoutes");
 const connectDB = require("./config/db");
-
+// const versionRoutes = require("./routes/versionRoutes");
 const authRoutes = require("./routes/authRoutes");
 const roomRoutes = require("./routes/roomRoutes");
 const userRoutes = require("./routes/userRoutes");
-
+const executionRoutes =
+  require("./routes/executionRoutes");
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,7 @@ const PORT = process.env.PORT || 5000;
 // ==============================
 
 
+// app.use("/api/version", versionRoutes);
 
 app.use(
   cors({
@@ -44,8 +46,11 @@ app.use(
 // ==============================
 
 app.use(express.json());
-
-
+app.use("/api/version", versionRoutes);
+app.use(
+  "/api/execute",
+  executionRoutes
+);
 // ==============================
 // API ROUTES
 // ==============================

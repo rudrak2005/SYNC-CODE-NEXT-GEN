@@ -1,0 +1,57 @@
+.history-panel{
+  width:260px;
+
+  background:#181818;
+  border-left:1px solid #333;
+
+  overflow:auto;
+
+  padding:12px;
+}
+
+.history-panel h3{
+  color:white;
+  margin-bottom:15px;
+}
+
+.history-card{
+  background:#232323;
+
+  border:1px solid #333;
+
+  padding:10px;
+
+  margin-bottom:12px;
+
+  border-radius:10px;
+}
+
+.history-top{
+  display:flex;
+
+  justify-content:space-between;
+
+  color:white;
+}
+
+.history-card p{
+  color:#999;
+
+  margin:8px 0;
+}
+
+.history-card button{
+  width:100%;
+
+  padding:8px;
+
+  border:none;
+
+  border-radius:8px;
+
+  background:#16A34A;
+
+  color:white;
+
+  cursor:pointer;
+}

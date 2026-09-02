@@ -1,0 +1,41 @@
+{
+  "project": "SyncCode NextGen",
+  "experiment": "Day 29-30 Performance Evaluation",
+  "environment": {
+    "browserSessions": 10,
+    "maxTestedUsers": 10,
+    "twentyUserTest": "Not performed",
+    "limitation": "Local laptop performance"
+  },
+  "results": [
+    {
+      "concurrentUsers": 2,
+      "averageSyncLatencyMs": null,
+      "p95LatencyMs": null,
+      "failedOrStaleUpdates": null,
+      "recoveryTimeMs": null
+    },
+    {
+      "concurrentUsers": 5,
+      "averageSyncLatencyMs": null,
+      "p95LatencyMs": null,
+      "failedOrStaleUpdates": null,
+      "recoveryTimeMs": null
+    },
+    {
+      "concurrentUsers": 10,
+      "averageSyncLatencyMs": 0,
+      "p95LatencyMs": 0,
+      "failedOrStaleUpdates": 0,
+      "recoveryTimeMs": 0
+    },
+    {
+      "concurrentUsers": 20,
+      "averageSyncLatencyMs": null,
+      "p95LatencyMs": null,
+      "failedOrStaleUpdates": null,
+      "recoveryTimeMs": null
+    }
+  ],
+  "observations": []
+}

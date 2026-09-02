@@ -1,0 +1,39 @@
+.connection-status {
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 6px 10px;
+
+  border-radius: 7px;
+
+  border: 1px solid #333;
+
+  background: #181818;
+
+  font-size: 12px;
+
+  white-space: nowrap;
+}
+
+.connection-status.connected {
+  color: #22c55e;
+}
+
+.connection-status.reconnecting {
+  color: #f59e0b;
+}
+
+.connection-status.disconnected {
+  color: #ef4444;
+}
+
+.connection-dot {
+  font-size: 10px;
+}
+
+.queue-count {
+  color: #aaa;
+}

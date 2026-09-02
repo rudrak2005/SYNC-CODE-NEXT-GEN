@@ -1,0 +1,23 @@
+.encryption-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 10px;
+
+  border: 1px solid #333;
+
+  border-radius: 7px;
+
+  background: #181818;
+
+  color: #888;
+
+  font-size: 12px;
+}
+
+.encryption-status.enabled {
+  color: #22c55e;
+
+  border-color: #166534;
+}

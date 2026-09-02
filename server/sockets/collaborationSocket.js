@@ -7,383 +7,269 @@ const {
   updateFileContent
 } = require("../services/projectService");
 
-
 const initializeCollaboration = (io) => {
-
   io.on("connection", (socket) => {
-
-    console.log(
-      `Socket connected: ${socket.id}`
-    );
-
+    console.log(`Socket connected: ${socket.id}`);
 
     /*
      * ========================================
      * ROOM JOIN
      * ========================================
      */
+    socket.on("room:join", ({ roomId, user }) => {
+      if (!roomId) return;
 
-    socket.on(
-      "room:join",
-      ({ roomId, user }) => {
+      const normalizedRoomId = roomId.toUpperCase();
 
-        if (!roomId) {
-          return;
-        }
+      socket.join(normalizedRoomId);
+      socket.roomId = normalizedRoomId;
+      socket.user = user;
 
-        const normalizedRoomId =
-          roomId.toUpperCase();
-
-
-        socket.join(
-          normalizedRoomId
-        );
-
-
-        socket.roomId =
-          normalizedRoomId;
-
-        socket.user =
-          user;
-
-
-        if (
-          !roomUsers.has(
-            normalizedRoomId
-          )
-        ) {
-
-          roomUsers.set(
-            normalizedRoomId,
-            new Map()
-          );
-        }
-
-
-        const users =
-          roomUsers.get(
-            normalizedRoomId
-          );
-
-
-        users.set(
-          socket.id,
-          {
-            socketId:
-              socket.id,
-
-            userId:
-              user?.id,
-
-            name:
-              user?.name ||
-              "Anonymous"
-          }
-        );
-
-
-        socket
-          .to(normalizedRoomId)
-          .emit(
-            "user:joined",
-            {
-              user:
-                users.get(
-                  socket.id
-                )
-            }
-          );
-
-
-        io
-          .to(normalizedRoomId)
-          .emit(
-            "room:users",
-            {
-              users:
-                Array.from(
-                  users.values()
-                )
-            }
-          );
-
-
-        console.log(
-          `${socket.id} joined ${normalizedRoomId}`
-        );
+      if (!roomUsers.has(normalizedRoomId)) {
+        roomUsers.set(normalizedRoomId, new Map());
       }
-    );
 
+      const users = roomUsers.get(normalizedRoomId);
+
+      users.set(socket.id, {
+        socketId: socket.id,
+        userId: user?.id,
+        name: user?.name || "Anonymous"
+      });
+
+      socket.to(normalizedRoomId).emit("user:joined", {
+        user: users.get(socket.id)
+      });
+      socket
+  .to(normalizedRoomId)
+  .emit(
+    "webrtc:peer-joined",
+    {
+      socketId: socket.id
+    }
+  );
+
+      io.to(normalizedRoomId).emit("room:users", {
+        users: Array.from(users.values())
+      });
+
+      console.log(`${socket.id} joined ${normalizedRoomId}`);
+    });
+
+    
 
     /*
      * ========================================
-     * CODE CHANGE
+     * CODE CHANGE (ONLY ONE LISTENER)
      * ========================================
      */
+    socket.on("code:change", async ({ roomId, fileName, code }) => {
+      if (!roomId || !fileName) return;
 
-    socket.on(
-      "code:change",
-      async ({
-        roomId,
-        fileName,
-        code
-      }) => {
+      const normalizedRoomId = roomId.toUpperCase();
 
-        if (
-          !roomId ||
-          !fileName
-        ) {
-          return;
-        }
+      try {
+        const project = await updateFileContent(
+          normalizedRoomId,
+          fileName,
+          code
+        );
 
+        socket.to(normalizedRoomId).emit("code:update", {
+          fileName,
+          code,
+          revision: project?.revision || 0
+        });
 
-        const normalizedRoomId =
-          roomId.toUpperCase();
+        socket.emit("revision:update", {
+          revision: project?.revision || 0
+        });
 
-
-        try {
-
-          /*
-           * Save code to MongoDB.
-           */
-
-          const project =
-            await updateFileContent(
-              normalizedRoomId,
-              fileName,
-              code
-            );
-
-
-          /*
-           * Send live update
-           * to other users.
-           */
-
-          socket
-            .to(normalizedRoomId)
-            .emit(
-              "code:update",
-              {
-                fileName,
-                code,
-                revision:
-                  project?.revision
-              }
-            );
-
-
-          console.log(
-            `Code updated: ${fileName} | revision: ${
-              project?.revision ?? "N/A"
-            }`
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Code persistence error:",
-            error.message
-          );
-        }
+        console.log(
+          `Code updated: ${fileName} | Revision ${project?.revision || 0}`
+        );
+      } catch (error) {
+        console.error("Code update failed:", error.message);
       }
-    );
+    });
+    /*
+ * ========================================
+ * E2EE CODE RELAY
+ * ========================================
+ */
 
+socket.on(
+  "e2ee:code",
+  ({
+    roomId,
+    payload
+  }) => {
+
+    if (
+      !roomId ||
+      !payload
+    ) {
+      return;
+    }
+
+
+    const normalizedRoomId =
+      roomId.toUpperCase();
+
+
+    /*
+     * IMPORTANT:
+     * Server does not decrypt.
+     */
+
+    socket
+      .to(normalizedRoomId)
+      .emit(
+        "e2ee:code",
+        {
+          payload
+        }
+      );
+
+
+    console.log(
+      `Encrypted code relayed in ${normalizedRoomId}`
+    );
+  }
+);
 
     /*
      * ========================================
      * FILE CREATE
      * ========================================
      */
+    socket.on("file:create", async ({ roomId, file }) => {
+      if (!roomId || !file?.name) return;
 
-    socket.on(
-      "file:create",
-      async ({
-        roomId,
-        file
-      }) => {
+      const normalizedRoomId = roomId.toUpperCase();
 
-        if (
-          !roomId ||
-          !file?.name
-        ) {
-          return;
-        }
+      try {
+        const project = await saveFile(normalizedRoomId, file);
 
+        socket.to(normalizedRoomId).emit("file:created", {
+          file,
+          revision: project?.revision || 0
+        });
 
-        const normalizedRoomId =
-          roomId.toUpperCase();
+        socket.emit("revision:update", {
+          revision: project?.revision || 0
+        });
 
-
-        try {
-
-          const project =
-            await saveFile(
-              normalizedRoomId,
-              file
-            );
-
-
-          socket
-            .to(normalizedRoomId)
-            .emit(
-              "file:created",
-              {
-                file,
-
-                revision:
-                  project?.revision
-              }
-            );
-
-
-          console.log(
-            `File created: ${file.name} | revision: ${
-              project?.revision ?? "N/A"
-            }`
-          );
-
-        } catch (error) {
-
-          console.error(
-            "File create persistence error:",
-            error.message
-          );
-        }
+        console.log(`File created: ${file.name}`);
+      } catch (error) {
+        console.error("File create failed:", error.message);
       }
-    );
-
+    });
 
     /*
      * ========================================
      * FILE DELETE
      * ========================================
      */
+    socket.on("file:delete", async ({ roomId, fileName }) => {
+      if (!roomId || !fileName) return;
 
-    socket.on(
-      "file:delete",
-      async ({
-        roomId,
-        fileName
-      }) => {
+      const normalizedRoomId = roomId.toUpperCase();
 
-        if (
-          !roomId ||
-          !fileName
-        ) {
-          return;
-        }
+      try {
+        const project = await deleteFile(normalizedRoomId, fileName);
 
+        socket.to(normalizedRoomId).emit("file:deleted", {
+          fileName,
+          revision: project?.revision || 0
+        });
 
-        const normalizedRoomId =
-          roomId.toUpperCase();
+        socket.emit("revision:update", {
+          revision: project?.revision || 0
+        });
 
-
-        try {
-
-          const project =
-            await deleteFile(
-              normalizedRoomId,
-              fileName
-            );
-
-
-          socket
-            .to(normalizedRoomId)
-            .emit(
-              "file:deleted",
-              {
-                fileName,
-
-                revision:
-                  project?.revision
-              }
-            );
-
-
-          console.log(
-            `File deleted: ${fileName} | revision: ${
-              project?.revision ?? "N/A"
-            }`
-          );
-
-        } catch (error) {
-
-          console.error(
-            "File delete persistence error:",
-            error.message
-          );
-        }
+        console.log(`File deleted: ${fileName}`);
+      } catch (error) {
+        console.error("File delete failed:", error.message);
       }
-    );
-
+    });
 
     /*
      * ========================================
      * FILE RENAME
      * ========================================
      */
-
     socket.on(
       "file:rename",
-      async ({
-        roomId,
-        oldFileName,
-        newFile
-      }) => {
+      async ({ roomId, oldFileName, newFile }) => {
+        if (!roomId || !oldFileName || !newFile?.name) return;
 
-        if (
-          !roomId ||
-          !oldFileName ||
-          !newFile?.name
-        ) {
-          return;
-        }
-
-
-        const normalizedRoomId =
-          roomId.toUpperCase();
-
+        const normalizedRoomId = roomId.toUpperCase();
 
         try {
-
-          const project =
-            await renameFile(
-              normalizedRoomId,
-              oldFileName,
-              newFile
-            );
-
-
-          socket
-            .to(normalizedRoomId)
-            .emit(
-              "file:renamed",
-              {
-                oldFileName,
-                newFile,
-
-                revision:
-                  project?.revision
-              }
-            );
-
-
-          console.log(
-            `File renamed: ${oldFileName} -> ${newFile.name} | revision: ${
-              project?.revision ?? "N/A"
-            }`
+          const project = await renameFile(
+            normalizedRoomId,
+            oldFileName,
+            newFile
           );
 
+          socket.to(normalizedRoomId).emit("file:renamed", {
+            oldFileName,
+            newFile,
+            revision: project?.revision || 0
+          });
+
+          socket.emit("revision:update", {
+            revision: project?.revision || 0
+          });
+
+          console.log(`File renamed: ${oldFileName} → ${newFile.name}`);
         } catch (error) {
-
-          console.error(
-            "File rename persistence error:",
-            error.message
-          );
+          console.error("File rename failed:", error.message);
         }
       }
     );
+
+/*
+ * ========================================
+ * PROJECT RESTORE
+ * ========================================
+ */
+
+socket.on(
+  "project:restore",
+  ({
+    roomId,
+    files,
+    revision
+  }) => {
+
+    if (
+      !roomId ||
+      !files
+    ) {
+      return;
+    }
+
+    const normalizedRoomId =
+      roomId.toUpperCase();
+
+    socket
+      .to(normalizedRoomId)
+      .emit(
+        "project:restored",
+        {
+          files,
+          revision
+        }
+      );
+
+    console.log(
+      `Project restored in ${normalizedRoomId}`
+    );
+  }
+);
+
 
 
     /*
@@ -391,147 +277,192 @@ const initializeCollaboration = (io) => {
      * CURSOR MOVE
      * ========================================
      */
+    socket.on("cursor:move", (cursor) => {
+      if (!socket.roomId) return;
 
-    socket.on(
-      "cursor:move",
-      (cursor) => {
+      socket.to(socket.roomId).emit("cursor:update", cursor);
+    });
+	socket.on(
+  "terminal:output",
+  ({ roomId, output }) => {
 
-        if (!socket.roomId) {
-          return;
-        }
+    socket
+      .to(roomId.toUpperCase())
+      .emit(
+        "terminal:update",
+        { output }
+      );
 
-
-        socket
-          .to(socket.roomId)
-          .emit(
-            "cursor:update",
-            cursor
-          );
-      }
-    );
-
+  }
+);
 
     /*
      * ========================================
      * ROOM LEAVE
      * ========================================
      */
+    /*
+ * ========================================
+ * WEBRTC OFFER
+ * ========================================
+ */
 
-    socket.on(
-      "room:leave",
-      () => {
+socket.on(
+  "webrtc:offer",
+  ({
+    target,
+    offer
+  }) => {
 
-        handleDisconnect(
-          socket,
-          io
-        );
+    if (
+      !target ||
+      !offer
+    ) {
+      return;
+    }
+
+    io.to(target).emit(
+      "webrtc:offer",
+      {
+        from: socket.id,
+        offer
       }
     );
+  }
+);
 
+
+/*
+ * ========================================
+ * WEBRTC ANSWER
+ * ========================================
+ */
+
+socket.on(
+  "webrtc:answer",
+  ({
+    target,
+    answer
+  }) => {
+
+    if (
+      !target ||
+      !answer
+    ) {
+      return;
+    }
+
+    io.to(target).emit(
+      "webrtc:answer",
+      {
+        from: socket.id,
+        answer
+      }
+    );
+  }
+);
+
+
+/*
+ * ========================================
+ * WEBRTC ICE CANDIDATE
+ * ========================================
+ */
+
+socket.on(
+  "webrtc:ice-candidate",
+  ({
+    target,
+    candidate
+  }) => {
+
+    if (
+      !target ||
+      !candidate
+    ) {
+      return;
+    }
+
+    io.to(target).emit(
+      "webrtc:ice-candidate",
+      {
+        from: socket.id,
+        candidate
+      }
+    );
+  }
+);
+
+
+/*
+ * ========================================
+ * PEER JOIN NOTIFICATION
+ * ========================================
+ */
+
+socket.on(
+  "room:join",
+  ({ roomId }) => {
+    /*
+     * Existing room:users logic
+     * already handles presence.
+
+     * This separate notification
+     * will be emitted below from
+     * the existing room join block.
+     */
+  }
+);
+
+
+
+
+    socket.on("room:leave", () => {
+      handleDisconnect(socket, io);
+    });
 
     /*
      * ========================================
      * DISCONNECT
      * ========================================
      */
-
-    socket.on(
-      "disconnect",
-      () => {
-
-        handleDisconnect(
-          socket,
-          io
-        );
-      }
-    );
-
+    socket.on("disconnect", () => {
+      handleDisconnect(socket, io);
+    });
   });
 };
-
 
 /*
  * ========================================
  * DISCONNECT HANDLER
  * ========================================
  */
+const handleDisconnect = (socket, io) => {
+  const roomId = socket.roomId;
 
-const handleDisconnect = (
-  socket,
-  io
-) => {
+  if (!roomId) return;
 
-  const roomId =
-    socket.roomId;
+  const users = roomUsers.get(roomId);
 
+  if (!users) return;
 
-  if (!roomId) {
-    return;
+  users.delete(socket.id);
+
+  socket.to(roomId).emit("user:left", {
+    socketId: socket.id,
+    user: socket.user
+  });
+
+  io.to(roomId).emit("room:users", {
+    users: Array.from(users.values())
+  });
+
+  if (users.size === 0) {
+    roomUsers.delete(roomId);
   }
 
-
-  const users =
-    roomUsers.get(
-      roomId
-    );
-
-
-  if (!users) {
-    return;
-  }
-
-
-  users.delete(
-    socket.id
-  );
-
-
-  socket
-    .to(roomId)
-    .emit(
-      "user:left",
-      {
-        socketId:
-          socket.id,
-
-        user:
-          socket.user
-      }
-    );
-
-
-  io
-    .to(roomId)
-    .emit(
-      "room:users",
-      {
-        users:
-          Array.from(
-            users.values()
-          )
-      }
-    );
-
-
-  if (
-    users.size === 0
-  ) {
-
-    roomUsers.delete(
-      roomId
-    );
-  }
-
-
-  socket.leave(
-    roomId
-  );
-
-
-  socket.roomId =
-    null;
+  socket.leave(roomId);
+  socket.roomId = null;
 };
 
-
-module.exports =
-  initializeCollaboration;
+module.exports = initializeCollaboration;

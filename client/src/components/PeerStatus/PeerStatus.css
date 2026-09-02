@@ -1,0 +1,18 @@
+.peer-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.peer-online {
+  color: #22c55e;
+}
+
+.peer-connecting {
+  color: #f59e0b;
+}
+
+.peer-status-muted {
+  opacity: 0.6;
+}
