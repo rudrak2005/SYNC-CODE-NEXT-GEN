@@ -3,7 +3,6 @@ require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const cors = require("cors");
 
 const connectDB = require("./config/db");
 
@@ -19,41 +18,69 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
+/*
+==================================================
+CORS
+==================================================
+*/
+
 const allowedOrigins = [
   "http://localhost:5173",
   "https://sync-code-next-gen-2.vercel.app",
-];
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+/*
+==================================================
+CORS MIDDLEWARE
+==================================================
+*/
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (allowedOrigins.includes(origin)) {
-    res.header(
+  /*
+   * Allow only known frontend origins.
+   */
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader(
       "Access-Control-Allow-Origin",
       origin
     );
   }
 
-  res.header(
-    "Vary",
-    "Origin"
-  );
+  /*
+   * Important for dynamic Origin responses.
+   */
+  res.setHeader("Vary", "Origin");
 
-  res.header(
+  /*
+   * Credentials
+   */
+  res.setHeader(
     "Access-Control-Allow-Credentials",
     "true"
   );
 
-  res.header(
+  /*
+   * Allowed methods
+   */
+  res.setHeader(
     "Access-Control-Allow-Methods",
     "GET,POST,PUT,PATCH,DELETE,OPTIONS"
   );
 
-  res.header(
+  /*
+   * Allowed headers
+   */
+  res.setHeader(
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization"
   );
 
+  /*
+   * Preflight request
+   */
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
@@ -61,37 +88,119 @@ app.use((req, res, next) => {
   next();
 });
 
+/*
+==================================================
+BODY PARSER
+==================================================
+*/
 
 app.use(express.json());
 
-app.use("/api/version", versionRoutes);
-app.use("/api/execute", executionRoutes);
-app.use("/api/ai", aiRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/rooms", roomRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/projects", projectRoutes);
+/*
+==================================================
+API ROUTES
+==================================================
+*/
+
+app.use(
+  "/api/version",
+  versionRoutes
+);
+
+app.use(
+  "/api/execute",
+  executionRoutes
+);
+
+app.use(
+  "/api/ai",
+  aiRoutes
+);
+
+app.use(
+  "/api/auth",
+  authRoutes
+);
+
+app.use(
+  "/api/rooms",
+  roomRoutes
+);
+
+app.use(
+  "/api/users",
+  userRoutes
+);
+
+app.use(
+  "/api/projects",
+  projectRoutes
+);
+
+/*
+==================================================
+DATABASE
+==================================================
+*/
 
 connectDB();
 
-const httpServer = http.createServer(app);
+/*
+==================================================
+HTTP SERVER
+==================================================
+*/
+
+const httpServer =
+  http.createServer(app);
+
+/*
+==================================================
+SOCKET.IO
+==================================================
+*/
 
 const io = new Server(httpServer, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "https://sync-code-next-gen-2.vercel.app",
+    origin: allowedOrigins,
+
+    methods: [
+      "GET",
+      "POST",
     ],
-    methods: ["GET", "POST"],
+
     credentials: true,
   },
 });
+
+/*
+==================================================
+COLLABORATION SOCKET
+==================================================
+*/
 
 const initializeCollaboration =
   require("./sockets/collaborationSocket");
 
 initializeCollaboration(io);
 
-httpServer.listen(PORT, "0.0.0.0", () => {
-  console.log(`SyncCode API running on port ${PORT}`);
-});
+/*
+==================================================
+START SERVER
+==================================================
+*/
+
+httpServer.listen(
+  PORT,
+  "0.0.0.0",
+  () => {
+    console.log(
+      `SyncCode API running on port ${PORT}`
+    );
+
+    console.log(
+      "Allowed origins:",
+      allowedOrigins
+    );
+  }
+);
