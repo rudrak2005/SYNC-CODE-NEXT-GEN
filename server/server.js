@@ -19,27 +19,48 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://sync-code-next-gen-2.vercel.app",
-  ],
-  methods: [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-  ],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-  ],
-  credentials: true,
-};
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://sync-code-next-gen-2.vercel.app",
+];
 
-app.use(cors(corsOptions));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header(
+      "Access-Control-Allow-Origin",
+      origin
+    );
+  }
+
+  res.header(
+    "Vary",
+    "Origin"
+  );
+
+  res.header(
+    "Access-Control-Allow-Credentials",
+    "true"
+  );
+
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+  );
+
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
 
 app.use(express.json());
 
