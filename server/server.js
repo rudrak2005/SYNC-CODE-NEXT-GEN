@@ -7,48 +7,23 @@ const cors = require("cors");
 
 const connectDB = require("./config/db");
 
-const projectRoutes =
-  require("./routes/projectRoutes");
-
-const versionRoutes =
-  require("./routes/versionRoutes");
-
-const authRoutes =
-  require("./routes/authRoutes");
-
-const roomRoutes =
-  require("./routes/roomRoutes");
-
-const userRoutes =
-  require("./routes/userRoutes");
-
-const executionRoutes =
-  require("./routes/executionRoutes");
-
-const aiRoutes =
-  require("./routes/aiRoutes");
+const projectRoutes = require("./routes/projectRoutes");
+const versionRoutes = require("./routes/versionRoutes");
+const authRoutes = require("./routes/authRoutes");
+const roomRoutes = require("./routes/roomRoutes");
+const userRoutes = require("./routes/userRoutes");
+const executionRoutes = require("./routes/executionRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 const app = express();
 
 const PORT = process.env.PORT || 5000;
-
-/*
-==================================================
-CORS
-==================================================
-*/
-
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.CLIENT_URL,
-].filter(Boolean);
 
 const corsOptions = {
   origin: [
     "http://localhost:5173",
     "https://sync-code-next-gen-2.vercel.app",
   ],
-
   methods: [
     "GET",
     "POST",
@@ -57,115 +32,28 @@ const corsOptions = {
     "DELETE",
     "OPTIONS",
   ],
-
   allowedHeaders: [
     "Content-Type",
     "Authorization",
   ],
-
   credentials: true,
 };
 
 app.use(cors(corsOptions));
-
-  methods: [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-  ],
-
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-  ],
-
-  credentials: true,
-};
-
-/*
- * Express CORS
- */
-app.use(cors(corsOptions));
-
-/*
- * Explicit preflight handling
- */
-
-
-/*
-==================================================
-BODY PARSER
-==================================================
-*/
 
 app.use(express.json());
 
-/*
-==================================================
-API ROUTES
-==================================================
-*/
-
-app.use(
-  "/api/version",
-  versionRoutes
-);
-
-app.use(
-  "/api/execute",
-  executionRoutes
-);
-
-app.use(
-  "/api/ai",
-  aiRoutes
-);
-
-app.use(
-  "/api/auth",
-  authRoutes
-);
-
-app.use(
-  "/api/rooms",
-  roomRoutes
-);
-
-app.use(
-  "/api/users",
-  userRoutes
-);
-
-app.use(
-  "/api/projects",
-  projectRoutes
-);
-
-/*
-==================================================
-DATABASE
-==================================================
-*/
+app.use("/api/version", versionRoutes);
+app.use("/api/execute", executionRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/rooms", roomRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/projects", projectRoutes);
 
 connectDB();
 
-/*
-==================================================
-HTTP SERVER
-==================================================
-*/
-
-const httpServer =
-  http.createServer(app);
-
-/*
-==================================================
-SOCKET.IO
-==================================================
-*/
+const httpServer = http.createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
@@ -178,34 +66,11 @@ const io = new Server(httpServer, {
   },
 });
 
-/*
-==================================================
-COLLABORATION
-==================================================
-*/
-
 const initializeCollaboration =
   require("./sockets/collaborationSocket");
 
 initializeCollaboration(io);
 
-/*
-==================================================
-START SERVER
-==================================================
-*/
-
-httpServer.listen(
-  PORT,
-  "0.0.0.0",
-  () => {
-    console.log(
-      `SyncCode API running on port ${PORT}`
-    );
-
-    console.log(
-      "Allowed CORS origins:",
-      allowedOrigins
-    );
-  }
-);
+httpServer.listen(PORT, "0.0.0.0", () => {
+  console.log(`SyncCode API running on port ${PORT}`);
+});
