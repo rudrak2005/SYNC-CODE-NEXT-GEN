@@ -91,7 +91,7 @@ app.use(cors(corsOptions));
 /*
  * Explicit preflight handling
  */
-app.options("*", cors(corsOptions));
+
 
 /*
 ==================================================
