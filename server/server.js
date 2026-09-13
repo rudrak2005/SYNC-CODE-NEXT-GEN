@@ -17,7 +17,7 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-
+const aiRoutes = require("./routes/aiRoutes");
 // ==============================
 // CORS
 // ==============================
@@ -54,7 +54,7 @@ app.use(
 // ==============================
 // API ROUTES
 // ==============================
-
+app.use("/api/ai", aiRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/users", userRoutes);

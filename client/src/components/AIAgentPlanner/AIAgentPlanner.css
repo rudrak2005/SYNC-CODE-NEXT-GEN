@@ -1,0 +1,246 @@
+.agent-planner {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 15px;
+
+  border: 1px solid #303744;
+  border-radius: 12px;
+
+  background: #10151b;
+  color: #e8edf4;
+}
+
+.agent-planner-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 14px;
+}
+
+.agent-planner-header h3 {
+  margin: 0;
+
+  font-size: 15px;
+}
+
+.agent-planner-header p {
+  margin: 4px 0 0;
+
+  color: #7d8896;
+
+  font-size: 11px;
+}
+
+.agent-planner-header > span {
+  padding: 4px 8px;
+
+  border: 1px solid #354252;
+  border-radius: 999px;
+
+  background: #161e27;
+
+  color: #a7b4c2;
+
+  font-size: 10px;
+}
+
+.agent-planner label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #adb8c5;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.agent-planner-task,
+.agent-planner-context {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  resize: vertical;
+
+  margin-bottom: 12px;
+
+  padding: 10px;
+
+  border: 1px solid #2a323d;
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #0a0e13;
+
+  color: #e7edf4;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+.agent-planner-task {
+  min-height: 80px;
+}
+
+.agent-planner-context {
+  min-height: 65px;
+}
+
+.agent-planner-task:focus,
+.agent-planner-context:focus {
+  border-color: #3b82f6;
+}
+
+.agent-planner-code-info {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin-bottom: 10px;
+
+  padding: 8px 10px;
+
+  border: 1px solid #242c35;
+  border-radius: 7px;
+
+  background: #0c1117;
+
+  color: #768391;
+
+  font-size: 9px;
+}
+
+.agent-planner-button {
+  width: 100%;
+
+  min-height: 40px;
+
+  border: 1px solid #4b7ec4;
+  border-radius: 8px;
+
+  background: #2563eb;
+
+  color: white;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.agent-planner-button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.agent-planner-button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+.agent-planner-error {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+  margin-top: 10px;
+
+  padding: 10px;
+
+  border: 1px solid #633737;
+  border-radius: 8px;
+
+  background: #2a1717;
+
+  color: #f1adad;
+
+  font-size: 11px;
+}
+
+.agent-planner-result {
+  margin-top: 12px;
+
+  overflow: hidden;
+
+  border: 1px solid #2c3540;
+  border-radius: 9px;
+
+  background: #090d12;
+}
+
+.agent-planner-result-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 9px 11px;
+
+  border-bottom: 1px solid #252d36;
+
+  background: #121820;
+
+  color: #d7dee7;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.agent-planner-result-header button {
+  border: none;
+
+  background: transparent;
+
+  color: #7b8795;
+
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.agent-planner-result pre {
+  max-height: 500px;
+
+  overflow-y: auto;
+
+  margin: 0;
+
+  padding: 12px;
+
+  white-space: pre-wrap;
+
+  word-break: break-word;
+
+  color: #d5dee8;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-size: 12px;
+
+  line-height: 1.65;
+}

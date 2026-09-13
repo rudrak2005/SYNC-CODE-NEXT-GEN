@@ -1,9 +1,17 @@
 import {
   BrowserRouter,
   Routes,
-  Route,
-  Navigate
+  Route
 } from "react-router-dom";
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import Home from "../pages/Home/Home";
+import Loading from "../pages/Loading/Loading";
+
 import Room from "../pages/Room/Room";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
@@ -15,33 +23,53 @@ import Editor from "../pages/Editor/Editor";
 
 import ProtectedRoute from "./ProtectedRoute";
 
+
+function Startup() {
+
+  const [showLoading, setShowLoading] =
+    useState(true);
+
+  useEffect(() => {
+
+    const timer =
+      setTimeout(() => {
+        setShowLoading(false);
+      }, 1800);
+
+    return () => {
+      clearTimeout(timer);
+    };
+
+  }, []);
+
+  if (showLoading) {
+    return <Loading />;
+  }
+
+  return <Home />;
+}
+
+
 function AppRoutes() {
+
   return (
     <BrowserRouter>
+
       <Routes>
 
-<Route
-  path="/room/:roomId"
-  element={
-    <ProtectedRoute>
-      <Room />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/room/:roomId/editor"
-  element={
-    <ProtectedRoute>
-      <Editor />
-    </ProtectedRoute>
-  }
-/>
-
+        {/* ===============================
+            STARTUP
+        =============================== */}
 
         <Route
           path="/"
-          element={<Navigate to="/dashboard" />}
+          element={<Startup />}
         />
+
+
+        {/* ===============================
+            AUTH
+        =============================== */}
 
         <Route
           path="/login"
@@ -58,6 +86,35 @@ function AppRoutes() {
           element={<ForgotPassword />}
         />
 
+
+        {/* ===============================
+            ROOM
+        =============================== */}
+
+        <Route
+          path="/room/:roomId"
+          element={
+            <ProtectedRoute>
+              <Room />
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
+          path="/room/:roomId/editor"
+          element={
+            <ProtectedRoute>
+              <Editor />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ===============================
+            DASHBOARD
+        =============================== */}
+
         <Route
           path="/dashboard"
           element={
@@ -66,6 +123,11 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+
+        {/* ===============================
+            CREATE PROJECT
+        =============================== */}
 
         <Route
           path="/create-project"
@@ -76,6 +138,11 @@ function AppRoutes() {
           }
         />
 
+
+        {/* ===============================
+            JOIN ROOM
+        =============================== */}
+
         <Route
           path="/join-room"
           element={
@@ -85,7 +152,18 @@ function AppRoutes() {
           }
         />
 
+
+        {/* ===============================
+            FALLBACK
+        =============================== */}
+
+        <Route
+          path="*"
+          element={<Startup />}
+        />
+
       </Routes>
+
     </BrowserRouter>
   );
 }

@@ -1,0 +1,186 @@
+.ai-bug-panel {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 15px;
+
+  border: 1px solid #302d2d;
+  border-radius: 12px;
+
+  background: #101317;
+  color: #e8edf3;
+}
+
+.ai-bug-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 12px;
+}
+
+.ai-bug-header h3 {
+  margin: 0;
+
+  font-size: 15px;
+}
+
+.ai-bug-header p {
+  margin: 4px 0 0;
+
+  color: #7d8794;
+
+  font-size: 11px;
+}
+
+.ai-bug-header > span {
+  padding: 4px 8px;
+
+  border: 1px solid #413b35;
+  border-radius: 999px;
+
+  background: #1a1714;
+
+  color: #b9a995;
+
+  font-size: 10px;
+}
+
+.ai-bug-meta {
+  display: flex;
+
+  justify-content: space-between;
+
+  padding: 8px 10px;
+
+  margin-bottom: 10px;
+
+  border: 1px solid #262c33;
+  border-radius: 7px;
+
+  background: #0b0f13;
+
+  color: #798492;
+
+  font-size: 10px;
+}
+
+.ai-bug-button {
+  width: 100%;
+
+  min-height: 40px;
+
+  border: 1px solid #8b4040;
+  border-radius: 8px;
+
+  background: #6f2f2f;
+
+  color: #fff;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.ai-bug-button:hover:not(:disabled) {
+  background: #873838;
+}
+
+.ai-bug-button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+.ai-bug-error {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+  margin-top: 10px;
+
+  padding: 10px;
+
+  border: 1px solid #633737;
+  border-radius: 8px;
+
+  background: #2a1717;
+
+  color: #f0aaaa;
+
+  font-size: 11px;
+}
+
+.ai-bug-result {
+  margin-top: 12px;
+
+  overflow: hidden;
+
+  border: 1px solid #30353c;
+  border-radius: 9px;
+
+  background: #090c10;
+}
+
+.ai-bug-result-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 9px 11px;
+
+  border-bottom: 1px solid #242a31;
+
+  background: #12171d;
+
+  color: #d6dde5;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ai-bug-result-header button {
+  border: none;
+
+  background: transparent;
+
+  color: #7a8693;
+
+  cursor: pointer;
+
+  font-size: 10px;
+}
+
+.ai-bug-result pre {
+  max-height: 450px;
+
+  overflow-y: auto;
+
+  margin: 0;
+
+  padding: 12px;
+
+  white-space: pre-wrap;
+
+  word-break: break-word;
+
+  color: #d3dce6;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-size: 12px;
+
+  line-height: 1.65;
+}

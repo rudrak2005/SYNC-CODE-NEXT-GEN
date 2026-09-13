@@ -1,0 +1,642 @@
+/* =========================================================
+   SYNC CODE NEXTGEN
+   CODE EDITOR
+   ========================================================= */
+
+.code-editor-wrapper {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(124, 58, 237, 0.035),
+      transparent 45%
+    ),
+    #0b1020;
+
+  color: #e2e8f0;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* =========================================================
+   TOP TOOLBAR
+   ========================================================= */
+
+.code-editor-toolbar {
+  position: relative;
+
+  height: 42px;
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 13px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(18, 24, 38, 0.98),
+      rgba(14, 20, 33, 0.98)
+    );
+
+  border-bottom: 1px solid #242d43;
+
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.015),
+    0 8px 22px rgba(0, 0, 0, 0.12);
+
+  z-index: 5;
+}
+
+.code-editor-file {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+}
+
+/* =========================================================
+   FILE ICON
+   ========================================================= */
+
+.code-editor-file-icon {
+  width: 24px;
+  height: 24px;
+
+  flex: 0 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 6px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(124, 58, 237, 0.22),
+      rgba(6, 182, 212, 0.10)
+    );
+
+  border: 1px solid rgba(124, 58, 237, 0.22);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 0 14px rgba(124, 58, 237, 0.07);
+}
+
+.code-editor-file-icon-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.08),
+    0 0 10px rgba(34, 197, 94, 0.55);
+}
+/* =========================================================
+   FILE META — FIXED LAYOUT
+========================================================= */
+
+.code-editor-file {
+  min-width: 0;
+  max-width: calc(100% - 190px);
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  flex: 1 1 auto;
+}
+
+.code-editor-file-meta {
+  min-width: 0;
+  max-width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  flex: 1 1 auto;
+
+  overflow: hidden;
+}
+
+.code-editor-file-name {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  flex: 1 1 auto;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  color: #f8fafc;
+
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+
+  letter-spacing: -0.01em;
+
+  /* Important */
+  position: static !important;
+  transform: none !important;
+}
+
+.code-editor-file-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: auto;
+  min-width: max-content;
+
+  padding: 4px 8px;
+
+  border-radius: 6px;
+
+  background: rgba(27, 34, 53, 0.95);
+
+  border: 1px solid #2a3248;
+
+  color: #94a3b8;
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    Consolas,
+    monospace;
+
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 600;
+
+  letter-spacing: 0.02em;
+
+  text-transform: lowercase;
+
+  white-space: nowrap;
+
+  position: static !important;
+  transform: none !important;
+}
+
+/* =========================================================
+   RIGHT STATUS
+   ========================================================= */
+
+.code-editor-toolbar-right {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  flex-shrink: 0;
+}
+
+.code-editor-live {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #86efac;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  letter-spacing: 0.01em;
+}
+
+.code-editor-live-pulse {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 0 0 rgba(34, 197, 94, 0.45),
+    0 0 9px rgba(34, 197, 94, 0.55);
+
+  animation:
+    codeEditorLivePulse
+    2s
+    ease-out
+    infinite;
+}
+
+.code-editor-divider {
+  width: 1px;
+  height: 16px;
+
+  background: #2a3248;
+}
+
+.code-editor-status-text {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  color: #64748b;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.code-editor-status-icon {
+  color: #22c55e;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   MONACO CONTAINER
+   ========================================================= */
+
+.code-editor-monaco {
+  position: relative;
+
+  flex: 1;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+
+  background: #0b1020;
+}
+
+/*
+ * Monaco React wrapper
+ */
+.code-editor-monaco > div {
+  width: 100% !important;
+  height: 100% !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/*
+ * Monaco root
+ */
+.code-editor-monaco .monaco-editor {
+  width: 100% !important;
+  height: 100% !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/*
+ * Monaco overflow guard
+ */
+.code-editor-monaco .overflow-guard {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* =========================================================
+   MONACO BACKGROUND
+   ========================================================= */
+
+.code-editor-monaco .monaco-editor,
+.code-editor-monaco .monaco-editor-background,
+.code-editor-monaco .margin,
+.code-editor-monaco .monaco-scrollable-element {
+  background-color: #0b1020 !important;
+}
+
+/* =========================================================
+   GUTTER / LINE NUMBERS
+   ========================================================= */
+
+.code-editor-monaco .margin {
+  border-right: 1px solid rgba(42, 50, 72, 0.28);
+}
+
+.code-editor-monaco .line-numbers {
+  color: #475569 !important;
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    Consolas,
+    monospace !important;
+
+  font-size: 12px !important;
+}
+
+.code-editor-monaco
+  .line-numbers.active-line-number {
+  color: #cbd5e1 !important;
+}
+
+/* =========================================================
+   ACTIVE LINE
+   ========================================================= */
+
+.code-editor-monaco .current-line {
+  border: none !important;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(124, 58, 237, 0.065),
+      rgba(124, 58, 237, 0.025),
+      transparent
+    ) !important;
+}
+
+/* =========================================================
+   SELECTED TEXT
+   ========================================================= */
+
+.code-editor-monaco .selected-text {
+  background:
+    rgba(124, 58, 237, 0.26) !important;
+}
+
+/* =========================================================
+   INDENTATION / GUIDES
+   ========================================================= */
+
+.code-editor-monaco
+  .core-guide-indent {
+  border-color:
+    rgba(71, 85, 105, 0.23) !important;
+}
+
+/* =========================================================
+   SUGGESTION / HOVER WIDGET
+   ========================================================= */
+
+.code-editor-monaco
+  .suggest-widget,
+.code-editor-monaco
+  .monaco-hover,
+.code-editor-monaco
+  .context-view {
+  border-radius: 8px !important;
+
+  border: 1px solid #2a3248 !important;
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.35),
+    0 4px 16px rgba(0, 0, 0, 0.22) !important;
+}
+
+.code-editor-monaco
+  .suggest-widget
+  .monaco-list-row.focused {
+  background: rgba(124, 58, 237, 0.20) !important;
+}
+
+/* =========================================================
+   SCROLLBARS
+   ========================================================= */
+
+.code-editor-monaco * {
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    #334155
+    transparent;
+}
+
+.code-editor-monaco
+  *::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.code-editor-monaco
+  *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-editor-monaco
+  *::-webkit-scrollbar-thumb {
+  background:
+    rgba(51, 65, 85, 0.90);
+
+  border-radius: 999px;
+
+  border: 2px solid transparent;
+
+  background-clip: padding-box;
+}
+
+.code-editor-monaco
+  *::-webkit-scrollbar-thumb:hover {
+  background:
+    rgba(71, 85, 105, 0.95);
+
+  border: 2px solid transparent;
+
+  background-clip: padding-box;
+}
+
+/* =========================================================
+   MINIMAP REFINEMENT
+   ========================================================= */
+
+.code-editor-monaco
+  .minimap {
+  opacity: 0.88;
+}
+
+.code-editor-monaco
+  .minimap-slider {
+  border-radius: 999px;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.code-editor-loading {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  background: #0b1020;
+
+  color: #64748b;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.code-editor-loading-spinner {
+  width: 24px;
+  height: 24px;
+
+  border: 2px solid #2a3248;
+  border-top-color: #8b5cf6;
+
+  border-radius: 50%;
+
+  animation:
+    codeEditorSpin
+    0.8s
+    linear
+    infinite;
+}
+
+/* =========================================================
+   LIVE ANIMATION
+   ========================================================= */
+
+@keyframes codeEditorLivePulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(34, 197, 94, 0.40),
+      0 0 9px rgba(34, 197, 94, 0.50);
+  }
+
+  70% {
+    box-shadow:
+      0 0 0 6px rgba(34, 197, 94, 0),
+      0 0 9px rgba(34, 197, 94, 0.25);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(34, 197, 94, 0),
+      0 0 8px rgba(34, 197, 94, 0.35);
+  }
+}
+
+@keyframes codeEditorSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .code-editor-file-name {
+    max-width: 220px;
+  }
+
+  .code-editor-toolbar-right {
+    gap: 8px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .code-editor-toolbar {
+    height: 40px;
+    min-height: 40px;
+
+    padding: 0 9px;
+  }
+
+  .code-editor-file {
+    gap: 7px;
+  }
+
+  .code-editor-file-icon {
+    width: 22px;
+    height: 22px;
+
+    flex-basis: 22px;
+  }
+
+  .code-editor-file-name {
+    max-width: 145px;
+  }
+
+  .code-editor-file-type {
+    display: none;
+  }
+
+  .code-editor-live {
+    font-size: 9px;
+  }
+
+  .code-editor-status-text {
+    display: none;
+  }
+
+  .code-editor-divider {
+    display: none;
+  }
+
+  .code-editor-monaco {
+    min-height: 0;
+  }
+}
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 460px) {
+  .code-editor-file-name {
+    max-width: 115px;
+  }
+
+  .code-editor-live span:last-child {
+    display: none;
+  }
+
+  .code-editor-toolbar-right {
+    gap: 4px;
+  }
+}

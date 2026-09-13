@@ -1,0 +1,211 @@
+.agent-workflow {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 15px;
+
+  border: 1px solid #303844;
+  border-radius: 12px;
+
+  background: #10151b;
+  color: #e8edf4;
+}
+
+.agent-workflow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+.agent-workflow-header h3 {
+  margin: 0;
+
+  font-size: 15px;
+}
+
+.agent-workflow-header p {
+  margin: 4px 0 0;
+
+  color: #7f8996;
+
+  font-size: 11px;
+}
+
+.agent-workflow-header span {
+  padding: 4px 8px;
+
+  border: 1px solid #374453;
+  border-radius: 999px;
+
+  background: #161e27;
+
+  color: #a7b4c2;
+
+  font-size: 10px;
+}
+
+.agent-workflow textarea {
+  width: 100%;
+  min-height: 80px;
+
+  box-sizing: border-box;
+
+  resize: vertical;
+
+  padding: 10px;
+
+  border: 1px solid #29323d;
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #0a0e13;
+  color: #e7edf4;
+
+  font: inherit;
+  font-size: 11px;
+}
+
+.agent-workflow textarea:focus {
+  border-color: #3b82f6;
+}
+
+.agent-workflow-actions {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr 1.4fr;
+
+  gap: 7px;
+
+  margin-top: 10px;
+}
+
+.agent-workflow-actions button {
+  min-height: 36px;
+
+  border: 1px solid #334150;
+  border-radius: 7px;
+
+  background: #17202a;
+
+  color: #b9c5d1;
+
+  cursor: pointer;
+
+  font-size: 10px;
+}
+
+.agent-workflow-actions button:first-child {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.agent-workflow-actions button:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.agent-workflow-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.agent-workflow-error {
+  margin-top: 10px;
+
+  padding: 9px;
+
+  border: 1px solid #633737;
+  border-radius: 7px;
+
+  background: #2a1717;
+
+  color: #f0aaaa;
+
+  font-size: 11px;
+}
+
+.agent-workflow-box {
+  margin-top: 12px;
+
+  overflow: hidden;
+
+  border: 1px solid #2b333e;
+  border-radius: 9px;
+
+  background: #090d12;
+}
+
+.agent-workflow-box h4 {
+  margin: 0;
+
+  padding: 9px 11px;
+
+  border-bottom: 1px solid #252d36;
+
+  background: #121820;
+
+  color: #d5dde6;
+
+  font-size: 11px;
+}
+
+.agent-workflow-box > p {
+  padding: 0 11px;
+
+  color: #8995a3;
+
+  font-size: 10px;
+}
+
+.agent-workflow-box pre {
+  max-height: 400px;
+
+  overflow-y: auto;
+
+  margin: 0;
+
+  padding: 12px;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  color: #d2dce7;
+
+  font-family: inherit;
+
+  font-size: 11px;
+
+  line-height: 1.6;
+}
+
+.agent-step {
+  padding: 11px;
+
+  border-bottom: 1px solid #202731;
+}
+
+.agent-step:last-child {
+  border-bottom: none;
+}
+
+.agent-step > strong {
+  color: #dce5ee;
+
+  font-size: 11px;
+}
+
+.agent-step > span {
+  margin-left: 8px;
+
+  color: #7892ad;
+
+  font-size: 9px;
+}
+
+.agent-step pre {
+  margin-top: 8px;
+}

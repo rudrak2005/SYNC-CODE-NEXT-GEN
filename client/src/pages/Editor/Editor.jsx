@@ -2,44 +2,43 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useState
+  useState,
 } from "react";
 
 import {
   Link,
-  useParams
+  useParams,
 } from "react-router-dom";
 
 import {
-  getLanguageFromFileName
+  getLanguageFromFileName,
 } from "../../utils/fileLanguage";
 
 import {
-  useAuth
+  useAuth,
 } from "../../context/AuthContext";
 
-import api
-  from "../../services/api";
-
-import socket
-  from "../../services/socket";
+import api from "../../services/api";
+import socket from "../../services/socket";
 
 import {
-  runCode
+  runCode,
 } from "../../services/executionApi";
 
 import {
   fetchVersions,
   createSnapshot,
-  restoreSnapshot
+  restoreSnapshot,
 } from "../../services/versionApi";
+
 import {
   saveEncryptedProject,
   loadEncryptedProject,
-  hasEncryptedProject
+  hasEncryptedProject,
 } from "../../services/encryptedProjectStorage";
+
 import {
-  clearRecoverySnapshot
+  clearRecoverySnapshot,
 } from "../../services/recoveryStorage";
 
 import CodeEditor
@@ -75,6 +74,9 @@ import ConnectionStatus
 import RecoveryStatus
   from "../../components/RecoveryStatus/RecoveryStatus";
 
+import AIPanel
+  from "../../components/AIPanel/AIPanel";
+
 import usePeerSync
   from "../../hooks/usePeerSync";
 
@@ -87,39 +89,36 @@ import useReconnectSync
 import useProjectRecovery
   from "../../hooks/useProjectRecovery";
 
-import "../../components/PeerStatus/PeerStatus.css";
-import "../../components/EncryptionStatus/EncryptionStatus.css";
-import "../../components/SecurityStatus/SecurityStatus.css";
-import "../../components/ConnectionStatus/ConnectionStatus.css";
-import "../../components/RecoveryStatus/RecoveryStatus.css";
+import "./Editor.css";
 
-import {
-  recordSyncLatency,
-  recordCodeChange,
-} from "../../services/performanceMonitor";
+import AIReviewPanel
+  from "../../components/AIReviewPanel/AIReviewPanel";
 
-/*
- * ========================================
- * INITIAL FILES
- * ========================================
- */
+import AIBugDetector
+  from "../../components/AIBugDetector/AIBugDetector";
+import AITestGenerator
+  from "../../components/AITestGenerator/AITestGenerator";
 
+import AIAgentPlanner
+  from "../../components/AIAgentPlanner/AIAgentPlanner";
+import AIAgentWorkflow
+  from "../../components/AIAgentWorkflow/AIAgentWorkflow";
+import AIDiffViewer
+  from "../../components/AIDiffViewer/AIDiffViewer";
+
+import { getExecutionPlan } from "../../lib/execution/executionManager.js";
 const initialFiles = {
-
   "main.js": {
     language: "javascript",
-
     content: `function hello() {
   console.log("Hello from SyncCode!");
 }
 
-hello();`
+hello();`,
   },
-
 
   "index.html": {
     language: "html",
-
     content: `<!DOCTYPE html>
 <html>
   <head>
@@ -129,13 +128,11 @@ hello();`
   <body>
     <h1>Hello SyncCode</h1>
   </body>
-</html>`
+</html>`,
   },
-
 
   "style.css": {
     language: "css",
-
     content: `body {
   margin: 0;
   font-family: sans-serif;
@@ -143,180 +140,134 @@ hello();`
 
 h1 {
   color: white;
-}`
-  }
-
+}`,
+  },
 };
 
-
-/*
- * ========================================
- * EDITOR
- * ========================================
- */
-
 function Editor() {
+  const { roomId } = useParams();
 
-  const {
-    roomId
-  } = useParams();
+  const { user } = useAuth();
 
+  /* ========================================
+     CORE STATE
+  ======================================== */
 
-  const {
-    user
-  } = useAuth();
+  const [files, setFiles] =
+    useState(initialFiles);
 
+  const [activeFile, setActiveFile] =
+    useState("main.js");
 
-  /*
-   * ========================================
-   * CORE STATE
-   * ========================================
-   */
+  const [onlineUsers, setOnlineUsers] =
+    useState([]);
 
-  const [
-    files,
-    setFiles
-  ] = useState(
-    initialFiles
-  );
+  const [versions, setVersions] =
+    useState([]);
 
+  const [projectRevision, setProjectRevision] =
+    useState(0);
 
-  const [
-    activeFile,
-    setActiveFile
-  ] = useState(
-    "main.js"
-  );
+  /* ========================================
+     TERMINAL
+  ======================================== */
 
+  const [output, setOutput] =
+    useState("");
 
-  const [
-    onlineUsers,
-    setOnlineUsers
-  ] = useState([]);
+  const [input, setInput] =
+    useState("");
 
+  const [running, setRunning] =
+    useState(false);
 
-  const [
-    versions,
-    setVersions
-  ] = useState([]);
-
-
-  const [
-    projectRevision,
-    setProjectRevision
-  ] = useState(0);
-
-
-  /*
-   * ========================================
-   * TERMINAL
-   * ========================================
-   */
-
-  const [
-    output,
-    setOutput
-  ] = useState("");
-
-
-  const [
-    input,
-    setInput
-  ] = useState("");
-
-
-  const [
-    running,
-    setRunning
-  ] = useState(false);
-
-
-  /*
-   * ========================================
-   * LOCAL ENCRYPTION
-   * ========================================
-   */
+  /* ========================================
+     LOCAL ENCRYPTION
+  ======================================== */
 
   const [
     localEncryptionEnabled,
-    setLocalEncryptionEnabled
+    setLocalEncryptionEnabled,
   ] = useState(false);
-
 
   const [
     encryptionPassword,
-    setEncryptionPassword
+    setEncryptionPassword,
   ] = useState("");
 
+  /* ========================================
+     ROOM E2EE
+  ======================================== */
 
-  /*
-   * ========================================
-   * ROOM E2EE
-   * ========================================
-   */
+  const [roomSecret, setRoomSecret] =
+    useState("");
+
+  /* ========================================
+     UI STATE
+  ======================================== */
+
+  const [aiOpen, setAiOpen] =
+    useState(true);
+
+  const [versionOpen, setVersionOpen] =
+    useState(true);
+
+  const [outputOpen, setOutputOpen] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
 
   const [
-    roomSecret,
-    setRoomSecret
-  ] = useState("");
+    encryptedBackupAvailable,
+    setEncryptedBackupAvailable,
+  ] = useState(false);
 
-
-  /*
-   * ========================================
-   * CURRENT FILE
-   * ========================================
-   */
+  /* ========================================
+     CURRENT FILE
+  ======================================== */
 
   const currentFile =
-    files[activeFile];
+    files[activeFile] || null;
 
-
-  /*
-   * ========================================
-   * RECONNECT
-   * ========================================
-   */
+  /* ========================================
+     RECONNECT
+  ======================================== */
 
   const {
     connectionStatus,
     queuedChanges,
-    sendOrQueue
+    sendOrQueue,
   } = useReconnectSync(
     socket,
     roomId,
     user
   );
 
-
-  /*
-   * ========================================
-   * WEBRTC
-   * ========================================
-   */
+  /* ========================================
+     WEBRTC
+  ======================================== */
 
   const {
     peerStatuses,
     peerMessages,
-    sendPeerCode
+    sendPeerCode,
   } = usePeerSync(
     socket,
     roomId,
     user
   );
 
-
-  /*
-   * ========================================
-   * E2EE
-   * ========================================
-   */
+  /* ========================================
+     E2EE
+  ======================================== */
 
   const {
     encryptionEnabled,
     enableEncryption,
     disableEncryption,
     sendEncryptedCode,
-    encryptedPeerUpdates
+    encryptedPeerUpdates,
   } = useEncryptedSync(
     socket,
     roomId,
@@ -324,300 +275,181 @@ function Editor() {
     roomSecret
   );
 
-
-  /*
-   * ========================================
-   * FILE LIST
-   * ========================================
-   */
+  /* ========================================
+     FILE LIST
+  ======================================== */
 
   const fileList =
     useMemo(() => {
-
       return Object.keys(files).map(
         (name) => {
-
           let icon = "TXT";
-
 
           if (
             name.endsWith(".js") ||
             name.endsWith(".jsx")
           ) {
-
             icon = "JS";
-
           } else if (
             name.endsWith(".html")
           ) {
-
             icon = "HT";
-
           } else if (
             name.endsWith(".css")
           ) {
-
             icon = "CS";
-
           } else if (
             name.endsWith(".py")
           ) {
-
             icon = "PY";
-
           } else if (
             name.endsWith(".json")
           ) {
-
             icon = "JSON";
-
           } else if (
             name.endsWith(".cpp")
           ) {
-
             icon = "C++";
-
           } else if (
             name.endsWith(".c")
           ) {
-
             icon = "C";
-
           } else if (
             name.endsWith(".md")
           ) {
-
             icon = "MD";
           }
 
-
           return {
             name,
-            icon
+            icon,
           };
         }
       );
-
     }, [files]);
 
-
-  /*
-   * ========================================
-   * VERSION HISTORY
-   * ========================================
-   */
+  /* ========================================
+     LOAD VERSIONS
+  ======================================== */
 
   const loadVersions =
-    useCallback(
-      async () => {
+    useCallback(async () => {
+      if (!roomId) return;
 
-        if (!roomId) {
-          return;
-        }
+      try {
+        const data =
+          await fetchVersions(roomId);
 
+        setVersions(
+          Array.isArray(data)
+            ? data
+            : []
+        );
+      } catch (error) {
+        console.error(
+          "Version load failed:",
+          error
+        );
+      }
+    }, [roomId]);
 
-        try {
-
-          const data =
-            await fetchVersions(
-              roomId
-            );
-
-
-          setVersions(
-            Array.isArray(data)
-              ? data
-              : []
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Version load failed:",
-            error
-          );
-
-        }
-
-      },
-      [roomId]
-    );
-
-
-  /*
-   * ========================================
-   * LOAD PROJECT
-   * ========================================
-   */
+  /* ========================================
+     LOAD PROJECT
+  ======================================== */
 
   const loadProject =
-    useCallback(
-      async () => {
+    useCallback(async () => {
+      if (!roomId) return;
 
-        if (!roomId) {
+      try {
+        const response =
+          await api.get(
+            `/projects/${roomId}`
+          );
+
+        const project =
+          response.data?.project;
+
+        if (
+          !project ||
+          !Array.isArray(
+            project.files
+          ) ||
+          project.files.length === 0
+        ) {
           return;
         }
 
+        const loadedFiles = {};
 
-        try {
+        project.files.forEach(
+          (file) => {
+            if (!file?.name) return;
 
-          console.log(
-            "Loading project:",
-            roomId
-          );
+            loadedFiles[file.name] = {
+              language:
+                file.language ||
+                getLanguageFromFileName(
+                  file.name
+                ) ||
+                "plaintext",
 
-
-          const response =
-            await api.get(
-              `/projects/${roomId}`
-            );
-
-
-          const project =
-            response.data?.project;
-
-
-          if (
-            !project ||
-            !Array.isArray(
-              project.files
-            ) ||
-            project.files.length === 0
-          ) {
-
-            console.log(
-              "No saved project found."
-            );
-
-            return;
+              content:
+                file.content || "",
+            };
           }
+        );
 
-
-          const loadedFiles = {};
-
-
-          project.files.forEach(
-            (file) => {
-
-              if (
-                !file?.name
-              ) {
-
-                return;
-              }
-
-
-              loadedFiles[
-                file.name
-              ] = {
-
-                language:
-                  file.language ||
-                  "plaintext",
-
-                content:
-                  file.content ||
-                  ""
-              };
-
-            }
-          );
-
-
-          if (
-            Object.keys(
-              loadedFiles
-            ).length === 0
-          ) {
-
-            return;
-          }
-
-
-          setFiles(
+        if (
+          Object.keys(
             loadedFiles
-          );
-
-
-          const revision =
-            Number(
-              project.revision
-            );
-
-
-          if (
-            Number.isFinite(
-              revision
-            )
-          ) {
-
-            setProjectRevision(
-              revision
-            );
-          }
-
-
-          const firstFile =
-            Object.keys(
-              loadedFiles
-            )[0];
-
-
-          setActiveFile(
-            firstFile
-          );
-
-
-          console.log(
-            "✅ Project loaded:",
-            Object.keys(
-              loadedFiles
-            )
-          );
-
-        } catch (error) {
-
-          console.error(
-            "❌ Project load error:",
-            error
-          );
-
-
-          console.error(
-            "Server response:",
-            error.response?.data
-          );
-
+          ).length === 0
+        ) {
+          return;
         }
 
-      },
-      [roomId]
-    );
+        setFiles(loadedFiles);
 
+        const revision =
+          Number(
+            project.revision
+          );
 
-  /*
-   * ========================================
-   * CREATE FILE
-   * ========================================
-   */
+        if (
+          Number.isFinite(revision)
+        ) {
+          setProjectRevision(
+            revision
+          );
+        }
+
+        const firstFile =
+          Object.keys(
+            loadedFiles
+          )[0];
+
+        setActiveFile(firstFile);
+      } catch (error) {
+        console.error(
+          "Project load error:",
+          error
+        );
+      }
+    }, [roomId]);
+
+  /* ========================================
+     FILE CREATE
+  ======================================== */
 
   const handleCreateFile =
     useCallback(
       (fileName) => {
-
         const name =
           fileName.trim();
 
+        if (!name) return;
 
-        if (!name) {
-          return;
-        }
-
-
-        if (
-          files[name]
-        ) {
-
+        if (files[name]) {
           window.alert(
             "A file with this name already exists."
           );
@@ -625,166 +457,110 @@ function Editor() {
           return;
         }
 
-
         const language =
           getLanguageFromFileName(
             name
           );
 
-
-        const newFile = {
-
-          name,
-
-          language,
-
-          content: ""
-        };
-
-
         setFiles(
-          (previousFiles) => ({
-            ...previousFiles,
+          (previous) => ({
+            ...previous,
 
             [name]: {
               language,
-              content: ""
-            }
+              content: "",
+            },
           })
         );
 
-
-        setActiveFile(
-          name
-        );
-
+        setActiveFile(name);
 
         sendOrQueue(
           "file:create",
           {
             roomId,
-            file: newFile
+
+            file: {
+              name,
+              language,
+              content: "",
+            },
           }
         );
-
       },
       [
         files,
         roomId,
-        sendOrQueue
+        sendOrQueue,
       ]
     );
 
-
-  /*
-   * ========================================
-   * DELETE FILE
-   * ========================================
-   */
+  /* ========================================
+     FILE DELETE
+  ======================================== */
 
   const handleDeleteFile =
     useCallback(
       (fileName) => {
-
         setFiles(
-          (previousFiles) => {
+          (previous) => {
+            const names =
+              Object.keys(previous);
 
-            const fileNames =
-              Object.keys(
-                previousFiles
-              );
-
-
-            if (
-              fileNames.length <= 1
-            ) {
-
+            if (names.length <= 1) {
               window.alert(
                 "At least one file must remain."
               );
 
-
-              return previousFiles;
+              return previous;
             }
 
-
-            if (
-              !previousFiles[
-                fileName
-              ]
-            ) {
-
-              return previousFiles;
+            if (!previous[fileName]) {
+              return previous;
             }
 
-
-            const updatedFiles = {
-              ...previousFiles
+            const updated = {
+              ...previous,
             };
 
-
-            delete updatedFiles[
-              fileName
-            ];
-
-
-            /*
-             * Change active file inside
-             * the same state operation.
-             */
+            delete updated[fileName];
 
             setActiveFile(
-              (currentActiveFile) => {
-
+              (current) => {
                 if (
-                  currentActiveFile !==
-                  fileName
+                  current !== fileName
                 ) {
-
-                  return currentActiveFile;
+                  return current;
                 }
 
-
-                const remaining =
-                  Object.keys(
-                    updatedFiles
-                  );
-
-
                 return (
-                  remaining[0] ||
+                  Object.keys(updated)[0] ||
                   ""
                 );
               }
             );
 
-
-            return updatedFiles;
+            return updated;
           }
         );
-
 
         sendOrQueue(
           "file:delete",
           {
             roomId,
-            fileName
+            fileName,
           }
         );
-
       },
       [
         roomId,
-        sendOrQueue
+        sendOrQueue,
       ]
     );
 
-
-  /*
-   * ========================================
-   * RENAME FILE
-   * ========================================
-   */
+  /* ========================================
+     FILE RENAME
+  ======================================== */
 
   const handleRenameFile =
     useCallback(
@@ -792,28 +568,17 @@ function Editor() {
         oldFileName,
         newFileName
       ) => {
-
         const newName =
           newFileName.trim();
 
-
-        if (!newName) {
-          return;
-        }
-
-
         if (
+          !newName ||
           oldFileName === newName
         ) {
-
           return;
         }
 
-
-        if (
-          files[newName]
-        ) {
-
+        if (files[newName]) {
           window.alert(
             "A file with this name already exists."
           );
@@ -821,377 +586,254 @@ function Editor() {
           return;
         }
 
-
         const oldFile =
-          files[
-            oldFileName
-          ];
+          files[oldFileName];
 
+        if (!oldFile) return;
 
-        if (!oldFile) {
-          return;
-        }
-
-
-        const newFile = {
-
-          name:
-            newName,
-
-          language:
-            getLanguageFromFileName(
-              newName
-            ),
-
-          content:
-            oldFile.content ||
-            ""
-        };
-
+        const language =
+          getLanguageFromFileName(
+            newName
+          );
 
         setFiles(
-          (previousFiles) => {
-
-            const updatedFiles = {
-              ...previousFiles
+          (previous) => {
+            const updated = {
+              ...previous,
             };
 
-
-            delete updatedFiles[
+            delete updated[
               oldFileName
             ];
 
-
-            updatedFiles[
-              newName
-            ] = {
-
-              language:
-                newFile.language,
-
+            updated[newName] = {
+              language,
               content:
-                newFile.content
+                oldFile.content || "",
             };
 
-
-            return updatedFiles;
+            return updated;
           }
         );
-
 
         setActiveFile(
-          (currentActiveFile) => {
-
-            if (
-              currentActiveFile ===
-              oldFileName
-            ) {
-
-              return newName;
-            }
-
-
-            return currentActiveFile;
-          }
+          (current) =>
+            current === oldFileName
+              ? newName
+              : current
         );
-
 
         sendOrQueue(
           "file:rename",
           {
             roomId,
             oldFileName,
-            newFile
+
+            newFile: {
+              name: newName,
+              language,
+              content:
+                oldFile.content || "",
+            },
           }
         );
-
       },
       [
         files,
         roomId,
-        sendOrQueue
+        sendOrQueue,
       ]
     );
 
-
-  /*
-   * ========================================
-   * SOCKET: CODE UPDATE
-   * ========================================
-   */
+  /* ========================================
+     REMOTE CODE
+  ======================================== */
 
   const handleCodeUpdate =
     useCallback(
       ({
         fileName,
         code,
-        revision
+        revision,
       }) => {
-
-        if (!fileName) {
-          return;
-        }
-
+        if (!fileName) return;
 
         setFiles(
-          (previousFiles) => {
-
+          (previous) => {
             if (
-              !previousFiles[
-                fileName
-              ]
+              !previous[fileName]
             ) {
-
-              return previousFiles;
+              return previous;
             }
 
-
             return {
-
-              ...previousFiles,
+              ...previous,
 
               [fileName]: {
-
-                ...previousFiles[
-                  fileName
-                ],
-
+                ...previous[fileName],
                 content:
-                  code ?? ""
-              }
+                  code ?? "",
+              },
             };
           }
         );
 
-
         if (
           revision !== undefined
         ) {
-
           setProjectRevision(
             revision
           );
         }
-
       },
       []
     );
 
-
-  /*
-   * ========================================
-   * SOCKET: FILE CREATED
-   * ========================================
-   */
+  /* ========================================
+     REMOTE FILE CREATE
+  ======================================== */
 
   const handleFileCreated =
     useCallback(
       ({
         file,
-        revision
+        revision,
       }) => {
-
-        if (
-          !file?.name
-        ) {
-
-          return;
-        }
-
+        if (!file?.name) return;
 
         setFiles(
-          (previousFiles) => {
-
+          (previous) => {
             if (
-              previousFiles[
-                file.name
-              ]
+              previous[file.name]
             ) {
-
-              return previousFiles;
+              return previous;
             }
 
-
             return {
-
-              ...previousFiles,
+              ...previous,
 
               [file.name]: {
-
                 language:
                   file.language ||
                   "plaintext",
 
                 content:
-                  file.content ||
-                  ""
-              }
+                  file.content || "",
+              },
             };
           }
         );
 
-
         if (
           revision !== undefined
         ) {
-
           setProjectRevision(
             revision
           );
         }
-
       },
       []
     );
 
-
-  /*
-   * ========================================
-   * SOCKET: FILE DELETED
-   * ========================================
-   */
+  /* ========================================
+     REMOTE FILE DELETE
+  ======================================== */
 
   const handleFileDeleted =
     useCallback(
       ({
         fileName,
-        revision
+        revision,
       }) => {
-
-        if (!fileName) {
-          return;
-        }
-
+        if (!fileName) return;
 
         setFiles(
-          (previousFiles) => {
-
+          (previous) => {
             if (
-              !previousFiles[
-                fileName
-              ]
+              !previous[fileName]
             ) {
-
-              return previousFiles;
+              return previous;
             }
 
-
-            const updatedFiles = {
-              ...previousFiles
+            const updated = {
+              ...previous,
             };
 
-
-            delete updatedFiles[
-              fileName
-            ];
-
-
-            /*
-             * Select another file if
-             * deleted file was active.
-             */
+            delete updated[fileName];
 
             setActiveFile(
-              (currentActiveFile) => {
-
+              (current) => {
                 if (
-                  currentActiveFile !==
-                  fileName
+                  current !== fileName
                 ) {
-
-                  return currentActiveFile;
+                  return current;
                 }
 
-
-                const remaining =
-                  Object.keys(
-                    updatedFiles
-                  );
-
-
                 return (
-                  remaining[0] ||
-                  ""
+                  Object.keys(
+                    updated
+                  )[0] || ""
                 );
               }
             );
 
-
-            return updatedFiles;
+            return updated;
           }
         );
-
 
         if (
           revision !== undefined
         ) {
-
           setProjectRevision(
             revision
           );
         }
-
       },
       []
     );
 
-
-  /*
-   * ========================================
-   * SOCKET: FILE RENAMED
-   * ========================================
-   */
+  /* ========================================
+     REMOTE FILE RENAME
+  ======================================== */
 
   const handleFileRenamed =
     useCallback(
       ({
         oldFileName,
         newFile,
-        revision
+        revision,
       }) => {
-
         if (
           !oldFileName ||
           !newFile?.name
         ) {
-
           return;
         }
 
-
         setFiles(
-          (previousFiles) => {
-
+          (previous) => {
             if (
-              !previousFiles[
+              !previous[
                 oldFileName
               ]
             ) {
-
-              return previousFiles;
+              return previous;
             }
 
-
-            const updatedFiles = {
-              ...previousFiles
+            const updated = {
+              ...previous,
             };
 
-
             const oldFile =
-              updatedFiles[
-                oldFileName
-              ];
+              updated[oldFileName];
 
-
-            delete updatedFiles[
+            delete updated[
               oldFileName
             ];
 
-
-            updatedFiles[
+            updated[
               newFile.name
             ] = {
-
               language:
                 newFile.language ||
                 oldFile.language ||
@@ -1200,353 +842,164 @@ function Editor() {
               content:
                 newFile.content ??
                 oldFile.content ??
-                ""
+                "",
             };
 
-
-            return updatedFiles;
+            return updated;
           }
         );
-
 
         setActiveFile(
-          (currentActiveFile) => {
-
-            if (
-              currentActiveFile ===
-              oldFileName
-            ) {
-
-              return newFile.name;
-            }
-
-
-            return currentActiveFile;
-          }
+          (current) =>
+            current === oldFileName
+              ? newFile.name
+              : current
         );
-
 
         if (
           revision !== undefined
         ) {
-
           setProjectRevision(
             revision
           );
         }
-
       },
       []
     );
 
-
-  /*
-   * ========================================
-   * USER LIST
-   * ========================================
-   */
+  /* ========================================
+     USERS
+  ======================================== */
 
   const handleUsers =
     useCallback(
-      ({
-        users
-      }) => {
-
+      ({ users }) => {
         setOnlineUsers(
           Array.isArray(users)
             ? users
             : []
         );
-
       },
       []
     );
 
-
-  /*
-   * ========================================
-   * TERMINAL OUTPUT
-   * ========================================
-   */
+  /* ========================================
+     TERMINAL
+  ======================================== */
 
   const handleTerminalOutput =
     useCallback(
-      ({
-        output: remoteOutput
-      }) => {
-
+      ({ output: remoteOutput }) => {
         setOutput(
-          remoteOutput ??
-          ""
+          remoteOutput ?? ""
         );
-
       },
       []
     );
 
-
-  /*
-   * ========================================
-   * PROJECT RESTORE EVENT
-   * ========================================
-   */
-
-  const handleProjectRestored =
-    useCallback(
-      ({
-        files: restoredFiles,
-        revision
-      }) => {
-
-        if (
-          !restoredFiles ||
-          typeof restoredFiles !==
-            "object"
-        ) {
-
-          return;
-        }
-
-
-        setFiles(
-          restoredFiles
-        );
-
-
-        const names =
-          Object.keys(
-            restoredFiles
-          );
-
-
-        setActiveFile(
-          names[0] ||
-          ""
-        );
-
-
-        if (
-          revision !== undefined
-        ) {
-
-          setProjectRevision(
-            revision
-          );
-        }
-
-      },
-      []
-    );
-
-
-  /*
-   * ========================================
-   * REVISION UPDATE
-   * ========================================
-   */
-
-  const handleRevisionUpdate =
-    useCallback(
-      ({
-        revision
-      }) => {
-
-        if (
-          revision !== undefined
-        ) {
-
-          setProjectRevision(
-            revision
-          );
-        }
-
-      },
-      []
-    );
-
-
-  /*
-   * ========================================
-   * SOCKET CONNECTION
-   * ========================================
-   *
-   * IMPORTANT:
-   *
-   * This effect must not re-run on every
-   * file edit.
-   */
+  /* ========================================
+     SOCKET SETUP
+  ======================================== */
 
   useEffect(() => {
+    if (!roomId) return;
 
-    if (
-      !user ||
-      !roomId
-    ) {
-
-      return;
-    }
-
-
-    /*
-     * Load initial data.
-     */
-
-    loadProject();
-    loadVersions();
-
-
-    /*
-     * Register listeners.
-     */
+    const handleConnect = () => {
+      socket.emit(
+        "room:join",
+        {
+          roomId,
+          user: {
+            id: user?.id,
+            name:
+              user?.name ||
+              user?.username ||
+              "User",
+          },
+        }
+      );
+    };
 
     socket.on(
-      "code:update",
-      handleCodeUpdate
+      "connect",
+      handleConnect
     );
 
+    socket.on(
+      "code:change",
+      handleCodeUpdate
+    );
 
     socket.on(
       "file:created",
       handleFileCreated
     );
 
-
     socket.on(
       "file:deleted",
       handleFileDeleted
     );
-
 
     socket.on(
       "file:renamed",
       handleFileRenamed
     );
 
-
     socket.on(
-      "room:users",
+      "users:list",
       handleUsers
     );
 
-
     socket.on(
-      "terminal:update",
+      "terminal:output",
       handleTerminalOutput
     );
 
+    loadProject();
+    loadVersions();
 
-    socket.on(
-      "project:restored",
-      handleProjectRestored
-    );
-
-
-    socket.on(
-      "revision:update",
-      handleRevisionUpdate
-    );
-
-
-    /*
-     * Connect only when necessary.
-     */
-
-    if (
-      !socket.connected
-    ) {
-
+    if (!socket.connected) {
       socket.connect();
+    } else {
+      handleConnect();
     }
 
-
-    /*
-     * Join room once for this
-     * editor lifecycle.
-     */
-
-    socket.emit(
-      "room:join",
-      {
-        roomId,
-
-        user: {
-          id:
-            user.id,
-
-          name:
-            user.name
-        }
-      }
-    );
-
-
-    /*
-     * Cleanup.
-     */
-
     return () => {
-
       socket.off(
-        "code:update",
-        handleCodeUpdate
+        "connect",
+        handleConnect
       );
 
+      socket.off(
+        "code:change",
+        handleCodeUpdate
+      );
 
       socket.off(
         "file:created",
         handleFileCreated
       );
 
-
       socket.off(
         "file:deleted",
         handleFileDeleted
       );
-
 
       socket.off(
         "file:renamed",
         handleFileRenamed
       );
 
-
       socket.off(
-        "room:users",
+        "users:list",
         handleUsers
       );
 
-
       socket.off(
-        "terminal:update",
+        "terminal:output",
         handleTerminalOutput
       );
-
-
-      socket.off(
-        "project:restored",
-        handleProjectRestored
-      );
-
-
-      socket.off(
-        "revision:update",
-        handleRevisionUpdate
-      );
-
-
-      /*
-       * Do NOT call socket.disconnect().
-       *
-       * useReconnectSync owns the
-       * reconnection lifecycle.
-       *
-       * Do NOT call room:leave here either,
-       * because reconnect should preserve
-       * the same socket lifecycle.
-       */
-
     };
-
   }, [
     roomId,
     user?.id,
@@ -1558,16 +1011,76 @@ function Editor() {
     handleFileRenamed,
     handleUsers,
     handleTerminalOutput,
-    handleProjectRestored,
-    handleRevisionUpdate
   ]);
 
+  /* ========================================
+     RECOVERY
+  ======================================== */
 
-  /*
-   * ========================================
-   * PROJECT RECOVERY
-   * ========================================
-   */
+  const handleProjectRecovered =
+    useCallback(
+      (snapshot) => {
+        if (!snapshot) return;
+
+        const recoveryFiles =
+          Array.isArray(snapshot.files)
+            ? snapshot.files
+            : snapshot.project?.files;
+
+        if (
+          Array.isArray(
+            recoveryFiles
+          )
+        ) {
+          const recovered = {};
+
+          recoveryFiles.forEach(
+            (file) => {
+              if (!file?.name) {
+                return;
+              }
+
+              recovered[file.name] = {
+                language:
+                  file.language ||
+                  getLanguageFromFileName(
+                    file.name
+                  ) ||
+                  "plaintext",
+
+                content:
+                  file.content || "",
+              };
+            }
+          );
+
+          if (
+            Object.keys(
+              recovered
+            ).length
+          ) {
+            setFiles(recovered);
+
+            setActiveFile(
+              snapshot.activeFile ||
+              Object.keys(
+                recovered
+              )[0]
+            );
+          }
+        }
+
+        if (
+          typeof snapshot.projectRevision ===
+            "number"
+        ) {
+          setProjectRevision(
+            snapshot.projectRevision
+          );
+        }
+      },
+      []
+    );
 
   const {
     recoveryStatus,
@@ -1575,765 +1088,435 @@ function Editor() {
     saveRecovery,
     recoverLocalSnapshot,
     recoverFromServer,
-    discardLocalRecovery
-  } = useProjectRecovery({
-    roomId,
+    discardLocalRecovery,
+  } =
+    useProjectRecovery({
+      roomId,
+      files,
+      activeFile,
+      projectRevision,
+      socket,
+      onProjectRecovered:
+        handleProjectRecovered,
+    });
 
-    user,
+  /* ========================================
+     CODE CHANGE
+  ======================================== */
 
-    files,
+  const handleCodeChange =
+    useCallback(
+      (content) => {
+        if (!activeFile) return;
 
-    activeFile,
+        setFiles(
+          (previous) => {
+            if (
+              !previous[activeFile]
+            ) {
+              return previous;
+            }
 
-    projectRevision,
+            return {
+              ...previous,
 
-    setFiles,
+              [activeFile]: {
+                ...previous[
+                  activeFile
+                ],
 
-    setActiveFile,
+                content:
+                  content ?? "",
+              },
+            };
+          }
+        );
 
-    socket
-  });
+        const payload = {
+          roomId,
 
+          fileName: activeFile,
 
-  /*
-   * ========================================
-   * WEBRTC PEER MESSAGES
-   * ========================================
-   */
+          code: content ?? "",
+
+          revision:
+            projectRevision,
+
+          clientTimestamp:
+            Date.now(),
+        };
+
+        if (
+          encryptionEnabled
+        ) {
+          sendEncryptedCode(
+            activeFile,
+            content ?? ""
+          );
+
+          return;
+        }
+
+        sendOrQueue(
+          "code:change",
+          payload
+        );
+
+        sendPeerCode(
+          activeFile,
+          content ?? ""
+        );
+
+        saveRecovery?.();
+      },
+      [
+        activeFile,
+        roomId,
+        projectRevision,
+        encryptionEnabled,
+        sendEncryptedCode,
+        sendOrQueue,
+        sendPeerCode,
+        saveRecovery,
+      ]
+    );
+
+  /* ========================================
+     PEER MESSAGE HANDLER
+  ======================================== */
 
   useEffect(() => {
+    if (
+      !Array.isArray(
+        peerMessages
+      )
+    ) {
+      return;
+    }
 
     const latest =
       peerMessages[
         peerMessages.length - 1
       ];
 
-
-    if (!latest) {
-      return;
-    }
-
-
-    const message =
-      latest.message;
-
-
     if (
-      message?.type !==
-      "code"
+      latest?.fileName &&
+      typeof latest.code ===
+        "string"
     ) {
+      handleCodeUpdate({
+        fileName:
+          latest.fileName,
 
-      return;
+        code:
+          latest.code,
+      });
     }
-
-
-    if (
-      message.roomId !==
-      roomId
-    ) {
-
-      return;
-    }
-
-
-    if (
-      !message.fileName
-    ) {
-
-      return;
-    }
-
-
-    setFiles(
-      (previousFiles) => {
-
-        if (
-          !previousFiles[
-            message.fileName
-          ]
-        ) {
-
-          return previousFiles;
-        }
-
-
-        return {
-
-          ...previousFiles,
-
-          [message.fileName]: {
-
-            ...previousFiles[
-              message.fileName
-            ],
-
-            content:
-              message.code ??
-              ""
-          }
-        };
-      }
-    );
-
   }, [
     peerMessages,
-    roomId
+    handleCodeUpdate,
   ]);
 
-
-  /*
-   * ========================================
-   * E2EE PEER MESSAGES
-   * ========================================
-   */
+  /* ========================================
+     ENCRYPTED PEER UPDATES
+  ======================================== */
 
   useEffect(() => {
+    if (
+      !Array.isArray(
+        encryptedPeerUpdates
+      )
+    ) {
+      return;
+    }
 
     const latest =
       encryptedPeerUpdates[
         encryptedPeerUpdates.length - 1
       ];
 
-
-    if (!latest) {
-      return;
-    }
-
+    if (!latest) return;
 
     if (
-      latest.roomId !==
-      roomId
+      latest.fileName &&
+      typeof latest.content ===
+        "string"
     ) {
+      handleCodeUpdate({
+        fileName:
+          latest.fileName,
 
-      return;
+        code:
+          latest.content,
+      });
     }
-
-
-    if (
-      !latest.fileName
-    ) {
-
-      return;
-    }
-
-
-    setFiles(
-      (previousFiles) => {
-
-        if (
-          !previousFiles[
-            latest.fileName
-          ]
-        ) {
-
-          return previousFiles;
-        }
-
-
-        return {
-
-          ...previousFiles,
-
-          [latest.fileName]: {
-
-            ...previousFiles[
-              latest.fileName
-            ],
-
-            content:
-              latest.code ??
-              ""
-          }
-        };
-      }
-    );
-
   }, [
     encryptedPeerUpdates,
-    roomId
+    handleCodeUpdate,
   ]);
 
+  /* ========================================
+     SAVE PROJECT
+  ======================================== */
 
-  /*
-   * ========================================
-   * LOCAL CODE CHANGE
-   * ========================================
-   */
+  const handleSaveProject =
+    useCallback(async () => {
+      if (
+        !roomId ||
+        saving
+      ) {
+        return;
+      }
 
-  const handleCodeChange =
-    useCallback(
-      (value) => {
+      setSaving(true);
 
-        const newCode =
-          value || "";
-
-
-        /*
-         * Local update first.
-         */
-
-        setFiles(
-          (previousFiles) => {
-
-            if (
-              !previousFiles[
-                activeFile
-              ]
-            ) {
-
-              return previousFiles;
-            }
-
-
-            return {
-
-              ...previousFiles,
-
-              [activeFile]: {
-
-                ...previousFiles[
-                  activeFile
-                ],
-
-                content:
-                  newCode
-              }
-            };
-          }
-        );
-
-
-        /*
-         * E2EE MODE
-         */
-
-        if (
-          encryptionEnabled &&
-          roomSecret
-        ) {
-
-          sendEncryptedCode(
-            activeFile,
-            newCode
-          );
-
-          return;
-        }
-
-
-        /*
-         * NORMAL SOCKET MODE
-         */
-
-        sendOrQueue(
-          "code:change",
+      try {
+        await api.put(
+          `/projects/${roomId}`,
           {
-            roomId,
-
-            fileName:
-              activeFile,
-
-            code:
-              newCode
-          }
-        );
-
-
-        /*
-         * WebRTC experimental
-         * peer path.
-         */
-
-        sendPeerCode(
-          activeFile,
-          newCode
-        );
-
-      },
-      [
-        activeFile,
-        encryptionEnabled,
-        roomSecret,
-        roomId,
-        sendEncryptedCode,
-        sendOrQueue,
-        sendPeerCode
-      ]
-    );
-
-
-  /*
-   * ========================================
-   * SAVE PROJECT
-   * ========================================
-   */
-
-  const handleSave =
-    useCallback(
-      async () => {
-
-        if (
-          !roomId
-        ) {
-
-          return;
-        }
-
-
-        try {
-
-          const projectFiles =
-            Object.entries(
+            files: Object.keys(
               files
             ).map(
-              ([name, file]) => ({
-
+              (name) => ({
                 name,
 
                 language:
-                  file.language ||
-                  "plaintext",
+                  files[name]
+                    .language ||
+                  getLanguageFromFileName(
+                    name
+                  ),
 
                 content:
-                  file.content ||
-                  ""
+                  files[name]
+                    .content || "",
               })
-            );
+            ),
 
-
-          const response =
-            await api.put(
-              `/projects/${roomId}`,
-              {
-                files:
-                  projectFiles
-              }
-            );
-
-
-          if (
-            !response.data?.success
-          ) {
-
-            window.alert(
-              "Project save failed."
-            );
-
-            return;
+            revision:
+              projectRevision,
           }
-
-
-          const savedRevision =
-            response.data?.project
-              ?.revision;
-
-
-          if (
-            savedRevision !==
-            undefined
-          ) {
-
-            setProjectRevision(
-              savedRevision
-            );
-          }
-
-
-          /*
-           * Create version snapshot.
-           */
-
-          try {
-
-            await createSnapshot(
-              roomId,
-              {
-                id:
-                  user?.id,
-
-                name:
-                  user?.name ||
-                  "Anonymous"
-              }
-            );
-
-          } catch (
-            snapshotError
-          ) {
-
-            console.error(
-              "Snapshot creation failed:",
-              snapshotError
-            );
-          }
-
-
-          await loadVersions();
-
-
-          /*
-           * Clear old recovery snapshot
-           * after successful server save.
-           */
-
-          clearRecoverySnapshot(
-            roomId
-          );
-
-
-          window.alert(
-            "Project saved successfully!"
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Save failed:",
-            error
-          );
-
-
-          console.error(
-            "Server response:",
-            error.response?.data
-          );
-
-
-          window.alert(
-            "Failed to save project."
-          );
-        }
-
-      },
-      [
-        roomId,
-        files,
-        user,
-        loadVersions
-      ]
-    );
-
-
-  /*
-   * ========================================
-   * RUN CODE
-   * ========================================
-   */
-
-  const handleRunCode =
-    useCallback(
-      async () => {
-
-        if (
-          !currentFile
-        ) {
-
-          return;
-        }
-
-
-        try {
-
-          setRunning(
-            true
-          );
-
-
-          setOutput(
-            "⏳ Running..."
-          );
-
-
-          const result =
-            await runCode(
-              currentFile.language,
-
-              currentFile.content,
-
-              input
-            );
-
-
-          setOutput(
-            result
-          );
-
-
-          /*
-           * Broadcast terminal output.
-           */
-
-          if (
-            socket.connected
-          ) {
-
-            socket.emit(
-              "terminal:output",
-              {
-                roomId,
-
-                output:
-                  result
-              }
-            );
-          }
-
-        } catch (error) {
-
-          console.error(
-            "Code execution failed:",
-            error
-          );
-
-
-          const message =
-            error.response?.data
-              ?.message ||
-            error.message ||
-            "Execution Failed";
-
-
-          setOutput(
-            `❌ ${message}`
-          );
-
-        } finally {
-
-          setRunning(
-            false
-          );
-        }
-
-      },
-      [
-        currentFile,
-        input,
-        roomId
-      ]
-    );
-
-
-  /*
-   * ========================================
-   * ENABLE ROOM SECURE SYNC
-   * ========================================
-   */
-
-  const handleEnableSecureSync =
-    useCallback(
-      () => {
-
-        const secret =
-          window.prompt(
-            "Enter shared room secret (minimum 6 characters):"
-          );
-
-
-        if (!secret) {
-          return;
-        }
-
-
-        if (
-          secret.length < 6
-        ) {
-
-          window.alert(
-            "Secret must contain at least 6 characters."
-          );
-
-          return;
-        }
-
-
-        setRoomSecret(
-          secret
         );
 
-
-        enableEncryption(
-          secret
+        clearRecoverySnapshot(
+          roomId
         );
 
+        await loadVersions();
 
         window.alert(
-          "🔐 Secure Sync enabled."
+          "Project saved successfully."
         );
-
-      },
-      [
-        enableEncryption
-      ]
-    );
-
-
-  /*
-   * ========================================
-   * DISABLE ROOM SECURE SYNC
-   * ========================================
-   */
-
-  const handleDisableSecureSync =
-    useCallback(
-      () => {
-
-        disableEncryption();
-
-        setRoomSecret("");
-
+      } catch (error) {
+        console.error(
+          "Project save failed:",
+          error
+        );
 
         window.alert(
-          "🔓 Normal Sync enabled."
+          "Project save failed."
         );
+      } finally {
+        setSaving(false);
+      }
+    }, [
+      roomId,
+      saving,
+      files,
+      projectRevision,
+      loadVersions,
+    ]);
 
-      },
-      [
-        disableEncryption
-      ]
+  /* ========================================
+     RUN CODE
+  ======================================== */
+const handleRunCode = useCallback(async () => {
+  if (running || !currentFile) {
+    return;
+  }
+
+  setRunning(true);
+  setOutput("");
+
+  try {
+    const fileName =
+      activeFile || "";
+
+    const extension =
+      fileName
+        .split(".")
+        .pop()
+        ?.toLowerCase();
+
+    let language = "javascript";
+
+    if (
+      extension === "js" ||
+      extension === "jsx"
+    ) {
+      language = "javascript";
+    } else if (extension === "py") {
+      language = "python";
+    } else if (extension === "cpp") {
+      language = "cpp";
+    } else if (extension === "c") {
+      language = "c";
+    } else if (extension === "java") {
+      language = "java";
+    }
+
+    console.log(
+      "Running file:",
+      fileName
     );
 
+    console.log(
+      "Detected language:",
+      language
+    );
 
-  /*
-   * ========================================
-   * ENABLE LOCAL ENCRYPTION
-   * ========================================
-   */
+    console.log(
+      "Code:",
+      currentFile.content
+    );
 
-  const handleEnableEncryption =
-    useCallback(
-      () => {
+    const result = await runCode({
+      language,
 
-        const password =
-          window.prompt(
-            "Create local encryption password:"
-          );
+      code:
+        currentFile.content || "",
 
+      input:
+        input || "",
+    });
 
-        if (!password) {
-          return;
+    console.log(
+      "Run result:",
+      result
+    );
+
+    const finalOutput =
+      result?.output ??
+      result?.data?.output ??
+      result?.stdout ??
+      result?.data?.stdout ??
+      result?.message ??
+      "";
+
+    setOutput(
+      String(finalOutput)
+    );
+
+    if (socket.connected) {
+      socket.emit(
+        "terminal:output",
+        {
+          roomId,
+
+          output:
+            String(finalOutput),
         }
+      );
+    }
+  } catch (error) {
+    console.error(
+      "Code execution failed:",
+      error
+    );
 
+    console.error(
+      "Backend response:",
+      error?.response?.data
+    );
 
-        if (
-          password.length < 6
-        ) {
+    setOutput(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Code execution failed."
+    );
+  } finally {
+    setRunning(false);
+  }
+}, [
+  running,
+  currentFile,
+  activeFile,
+  input,
+  roomId,
+]);
+  /* ========================================
+     LOCAL ENCRYPTED BACKUP
+  ======================================== */
 
-          window.alert(
-            "Password must be at least 6 characters."
-          );
+  const handleEncryptedBackup =
+    useCallback(async () => {
+      if (!roomId) return;
 
-          return;
-        }
+      const password =
+        window.prompt(
+          "Enter password for encrypted backup:"
+        );
 
+      if (!password) return;
 
-        setEncryptionPassword(
+      try {
+        await saveEncryptedProject(
+          roomId,
+          {
+            files,
+            activeFile,
+            projectRevision,
+          },
           password
         );
 
-
-        setLocalEncryptionEnabled(
+        setEncryptedBackupAvailable(
           true
         );
 
-
         window.alert(
-          "🔐 Local encryption enabled."
+          "Encrypted backup created successfully."
+        );
+      } catch (error) {
+        console.error(
+          "Encrypted backup failed:",
+          error
         );
 
-      },
-      []
-    );
+        window.alert(
+          "Encrypted backup failed."
+        );
+      }
+    }, [
+      roomId,
+      files,
+      activeFile,
+      projectRevision,
+    ]);
 
-
-  /*
-   * ========================================
-   * ENCRYPTED BACKUP
-   * ========================================
-   */
-
-  const handleEncryptedBackup =
-    useCallback(
-      async () => {
-
-        if (
-          !localEncryptionEnabled
-        ) {
-
-          window.alert(
-            "Enable local encryption first."
-          );
-
-          return;
-        }
-
-
-        if (
-          !encryptionPassword
-        ) {
-
-          window.alert(
-            "Encryption password is missing."
-          );
-
-          return;
-        }
-
-
-        try {
-
-          await saveEncryptedProject(
-            roomId,
-
-            files,
-
-            encryptionPassword
-          );
-
-
-          window.alert(
-            "🔐 Encrypted local backup saved."
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Encrypted backup failed:",
-            error
-          );
-
-
-          window.alert(
-            "Encrypted backup failed."
-          );
-
-        }
-
-      },
-      [
-        localEncryptionEnabled,
-        encryptionPassword,
-        roomId,
-        files
-      ]
-    );
-
-
-  /*
-   * ========================================
-   * ENCRYPTED RESTORE
-   * ========================================
-   */
+  /* ========================================
+     LOCAL ENCRYPTED RESTORE
+  ======================================== */
 
   const handleEncryptedRestore =
-    useCallback(
-      async () => {
+    useCallback(async () => {
+      if (!roomId) return;
 
-        if (
-          !hasEncryptedProject(
-            roomId
-          )
-        ) {
+      const password =
+        window.prompt(
+          "Enter backup password:"
+        );
 
+      if (!password) return;
+
+      try {
+        const data =
+          await loadEncryptedProject(
+            roomId,
+            password
+          );
+
+        if (!data) {
           window.alert(
             "No encrypted backup found."
           );
@@ -2341,562 +1524,1009 @@ function Editor() {
           return;
         }
 
+        if (
+          Array.isArray(
+            data.files
+          )
+        ) {
+          const restored = {};
 
-        const password =
-          window.prompt(
-            "Enter encryption password:"
-          );
-
-
-        if (!password) {
-          return;
-        }
-
-
-        try {
-
-          const decrypted =
-            await loadEncryptedProject(
-              roomId,
-              password
-            );
-
-
-          if (
-            !decrypted?.files
-          ) {
-
-            throw new Error(
-              "Invalid encrypted project."
-            );
-          }
-
-
-          setFiles(
-            decrypted.files
-          );
-
-
-          const names =
-            Object.keys(
-              decrypted.files
-            );
-
-
-          setActiveFile(
-            names[0] ||
-            ""
-          );
-
-
-          setEncryptionPassword(
-            password
-          );
-
-
-          setLocalEncryptionEnabled(
-            true
-          );
-
-
-          window.alert(
-            "✅ Encrypted project restored."
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Encrypted restore failed:",
-            error
-          );
-
-
-          window.alert(
-            "❌ Wrong password or corrupted backup."
-          );
-        }
-
-      },
-      [roomId]
-    );
-
-
-  /*
-   * ========================================
-   * RESTORE VERSION
-   * ========================================
-   */
-
-  const handleRestore =
-    useCallback(
-      async (
-        revision
-      ) => {
-
-        try {
-
-          const project =
-            await restoreSnapshot(
-              roomId,
-              revision
-            );
-
-
-          if (
-            !project?.files ||
-            !Array.isArray(
-              project.files
-            )
-          ) {
-
-            throw new Error(
-              "Invalid restored project."
-            );
-          }
-
-
-          const restoredFiles = {};
-
-
-          project.files.forEach(
+          data.files.forEach(
             (file) => {
-
-              if (
-                !file?.name
-              ) {
-
+              if (!file?.name) {
                 return;
               }
 
-
-              restoredFiles[
+              restored[
                 file.name
               ] = {
-
                 language:
                   file.language ||
                   "plaintext",
 
                 content:
                   file.content ||
-                  ""
+                  "",
               };
-
             }
           );
 
-
-          setFiles(
-            restoredFiles
-          );
-
-
-          const names =
-            Object.keys(
-              restoredFiles
-            );
-
+          setFiles(restored);
 
           setActiveFile(
-            names[0] ||
+            data.activeFile ||
+            Object.keys(
+              restored
+            )[0] ||
             ""
           );
+        }
 
+        if (
+          typeof data.projectRevision ===
+            "number"
+        ) {
+          setProjectRevision(
+            data.projectRevision
+          );
+        }
+
+        window.alert(
+          "Encrypted backup restored."
+        );
+      } catch (error) {
+        console.error(
+          "Encrypted restore failed:",
+          error
+        );
+
+        window.alert(
+          "Invalid password or corrupted backup."
+        );
+      }
+    }, [roomId]);
+
+  /* ========================================
+     CHECK ENCRYPTED BACKUP
+  ======================================== */
+
+  useEffect(() => {
+    if (!roomId) return;
+
+    try {
+      setEncryptedBackupAvailable(
+        hasEncryptedProject(
+          roomId
+        )
+      );
+    } catch {
+      setEncryptedBackupAvailable(
+        false
+      );
+    }
+  }, [roomId]);
+
+  /* ========================================
+     TOGGLE ROOM ENCRYPTION
+  ======================================== */
+
+  const handleToggleEncryption =
+    useCallback(() => {
+      if (
+        encryptionEnabled
+      ) {
+        disableEncryption();
+
+        return;
+      }
+
+      const secret =
+        window.prompt(
+          "Enter room encryption secret:"
+        );
+
+      if (!secret) return;
+
+      setRoomSecret(secret);
+
+      enableEncryption(
+        secret
+      );
+    }, [
+      encryptionEnabled,
+      enableEncryption,
+      disableEncryption,
+    ]);
+
+  /* ========================================
+     TOGGLE LOCAL ENCRYPTION
+  ======================================== */
+
+  const handleToggleLocalEncryption =
+    useCallback(() => {
+      if (
+        localEncryptionEnabled
+      ) {
+        setLocalEncryptionEnabled(
+          false
+        );
+
+        return;
+      }
+
+      const password =
+        window.prompt(
+          "Set local encryption password:"
+        );
+
+      if (!password) return;
+
+      setEncryptionPassword(
+        password
+      );
+
+      setLocalEncryptionEnabled(
+        true
+      );
+    }, [
+      localEncryptionEnabled,
+    ]);
+
+  /* ========================================
+     CREATE VERSION SNAPSHOT
+  ======================================== */
+
+  const handleCreateSnapshot =
+    useCallback(async () => {
+      if (!roomId) return;
+
+      try {
+        await createSnapshot(
+          roomId,
+          Object.keys(files).map(
+            (name) => ({
+              name,
+
+              language:
+                files[name]
+                  .language ||
+                "plaintext",
+
+              content:
+                files[name]
+                  .content || "",
+            })
+          )
+        );
+
+        await loadVersions();
+
+        window.alert(
+          "Version snapshot created."
+        );
+      } catch (error) {
+        console.error(
+          "Snapshot creation failed:",
+          error
+        );
+
+        window.alert(
+          "Snapshot creation failed."
+        );
+      }
+    }, [
+      roomId,
+      files,
+      loadVersions,
+    ]);
+
+  /* ========================================
+     RESTORE VERSION
+  ======================================== */
+
+  const handleRestoreVersion =
+    useCallback(
+      async (version) => {
+        if (!version) return;
+
+        try {
+          const restored =
+            await restoreSnapshot(
+              roomId,
+              version._id ||
+                version.id
+            );
+
+          const restoredFiles =
+            restored?.files ||
+            restored?.project
+              ?.files;
 
           if (
-            project.revision !==
-            undefined
+            !Array.isArray(
+              restoredFiles
+            )
           ) {
-
-            setProjectRevision(
-              project.revision
-            );
+            return;
           }
 
+          const mapped = {};
 
-          await loadVersions();
-
-
-          /*
-           * Send restore event to
-           * collaborators.
-           */
-
-          if (
-            socket.connected
-          ) {
-
-            socket.emit(
-              "project:restore",
-              {
-                roomId,
-
-                files:
-                  restoredFiles,
-
-                revision:
-                  project.revision
+          restoredFiles.forEach(
+            (file) => {
+              if (!file?.name) {
+                return;
               }
+
+              mapped[file.name] = {
+                language:
+                  file.language ||
+                  "plaintext",
+
+                content:
+                  file.content ||
+                  "",
+              };
+            }
+          );
+
+          setFiles(mapped);
+
+          setActiveFile(
+            Object.keys(
+              mapped
+            )[0] || ""
+          );
+
+          if (
+            typeof restored?.revision ===
+              "number"
+          ) {
+            setProjectRevision(
+              restored.revision
             );
           }
-
-
-          /*
-           * Remove stale recovery snapshot.
-           */
 
           clearRecoverySnapshot(
             roomId
           );
 
+          if (
+            socket.connected
+          ) {
+            socket.emit(
+              "project:restore",
+              {
+                roomId,
+                files:
+                  restoredFiles,
+              }
+            );
+          }
 
-          window.alert(
-            `Version #${revision} restored successfully.`
-          );
-
+          await loadVersions();
         } catch (error) {
-
           console.error(
-            "Restore failed:",
+            "Version restore failed:",
             error
           );
 
-
           window.alert(
-            "Failed to restore version."
+            "Version restore failed."
           );
         }
-
       },
       [
         roomId,
-        loadVersions
+        loadVersions,
       ]
     );
 
-
-  /*
-   * ========================================
-   * RENDER
-   * ========================================
-   */
-
   return (
-
-    <div className="editor-page">
+    <div className="synccode-editor-page">
 
       {/* ====================================
-          HEADER
-          ==================================== */}
+          TOP NAVBAR
+      ==================================== */}
 
-      <header className="editor-header">
+      <header className="synccode-topbar">
 
-        <Link
-          to={`/room/${roomId}`}
-          className="editor-back"
-        >
-          ← {onlineUsers.length} Online
-        </Link>
+        <div className="synccode-brand">
+          <Link
+            to="/dashboard"
+            className="synccode-brand-link"
+          >
+            <span className="brand-mark">
+              {"</>"}
+            </span>
 
+            <span className="brand-name">
+              SyncCode
+            </span>
 
-        <div className="editor-actions">
+            <span className="brand-version">
+              NextGen
+            </span>
+          </Link>
+        </div>
 
-          <ConnectionStatus
-            status={
-              connectionStatus
+        <div className="synccode-room-info">
+
+          <span className="room-label">
+            ROOM
+          </span>
+
+          <span className="room-id">
+            {roomId || "—"}
+          </span>
+
+          <span className="room-divider">
+            /
+          </span>
+
+          <span className="active-file-name">
+            {activeFile || "No file"}
+          </span>
+
+        </div>
+
+        <div className="synccode-toolbar">
+
+          <div className="toolbar-status">
+
+            <ConnectionStatus
+              status={
+                connectionStatus
+              }
+            />
+
+            <PeerStatus
+              peerStatuses={
+                peerStatuses
+              }
+            />
+
+          </div>
+
+          <div className="toolbar-divider" />
+
+          <button
+            type="button"
+            className={
+              "toolbar-btn " +
+              (
+                encryptionEnabled
+                  ? "toolbar-btn-active"
+                  : ""
+              )
             }
-
-            queuedChanges={
-              queuedChanges
+            onClick={
+              handleToggleEncryption
             }
-          />
+            title="Room encryption"
+          >
+            <span>🔐</span>
+            <span>Secure</span>
+          </button>
 
-
-          <PeerStatus
-            peerStatuses={
-              peerStatuses
+          <button
+            type="button"
+            className={
+              "toolbar-btn " +
+              (
+                localEncryptionEnabled
+                  ? "toolbar-btn-active"
+                  : ""
+              )
             }
-          />
-
-
-          <EncryptionStatus
-            enabled={
-              encryptionEnabled
+            onClick={
+              handleToggleLocalEncryption
             }
-          />
+            title="Local encryption"
+          >
+            <span>◈</span>
+            <span>Local</span>
+          </button>
 
-
-          <SecurityStatus
-            encrypted={
-              localEncryptionEnabled
+          <button
+            type="button"
+            className="toolbar-btn"
+            onClick={
+              handleEncryptedBackup
             }
-          />
+            title="Create encrypted backup"
+          >
+            <span>⬆</span>
+            <span>Backup</span>
+          </button>
 
+          <button
+            type="button"
+            className="toolbar-btn"
+            onClick={
+              handleEncryptedRestore
+            }
+            disabled={
+              !encryptedBackupAvailable
+            }
+            title="Restore encrypted backup"
+          >
+            <span>↻</span>
+            <span>Restore</span>
+          </button>
+
+          <button
+            type="button"
+            className="toolbar-btn toolbar-save-btn"
+            onClick={
+              handleSaveProject
+            }
+            disabled={saving}
+            title="Save project"
+          >
+            <span>💾</span>
+            <span>
+              {saving
+                ? "Saving..."
+                : "Save"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="toolbar-btn toolbar-run-btn"
+            onClick={
+              handleRunCode
+            }
+            disabled={
+              running ||
+              !currentFile
+            }
+            title="Run current file"
+          >
+            <span>▶</span>
+            <span>
+              {running
+                ? "Running..."
+                : "Run"}
+            </span>
+          </button>
+
+        </div>
+      </header>
+
+      {/* ====================================
+          SECONDARY NAVBAR
+      ==================================== */}
+
+      <div className="synccode-subbar">
+
+        <div className="subbar-left">
+
+          <span className="subbar-title">
+            Workspace
+          </span>
+
+          <span className="subbar-separator">
+            /
+          </span>
+
+          <span className="subbar-file">
+            {activeFile}
+          </span>
+
+        </div>
+
+        <div className="subbar-actions">
+
+          <button
+            type="button"
+            className={
+              "subbar-btn " +
+              (
+                aiOpen
+                  ? "subbar-btn-active"
+                  : ""
+              )
+            }
+            onClick={() =>
+              setAiOpen(
+                (value) => !value
+              )
+            }
+          >
+            ✦ AI
+          </button>
+
+          <button
+            type="button"
+            className={
+              "subbar-btn " +
+              (
+                versionOpen
+                  ? "subbar-btn-active"
+                  : ""
+              )
+            }
+            onClick={() =>
+              setVersionOpen(
+                (value) => !value
+              )
+            }
+          >
+            ◷ Versions
+          </button>
+
+          <button
+            type="button"
+            className="subbar-btn"
+            onClick={
+              handleCreateSnapshot
+            }
+          >
+            + Snapshot
+          </button>
 
           <RecoveryStatus
             status={
               recoveryStatus
             }
-
-            hasUnsavedRecovery={
+            hasRecovery={
               hasUnsavedRecovery
             }
-
             onRecover={
               recoverLocalSnapshot
             }
-
             onDiscard={
               discardLocalRecovery
             }
           />
 
-
-          {encryptionEnabled ? (
-
-            <button
-              className="save-button"
-              onClick={
-                handleDisableSecureSync
-              }
-            >
-              🔓 Disable
-            </button>
-
-          ) : (
-
-            <button
-              className="save-button"
-              onClick={
-                handleEnableSecureSync
-              }
-            >
-              🔐 Secure
-            </button>
-
-          )}
-
-
-          <button
-            className="save-button"
-            onClick={
-              handleEnableEncryption
-            }
-          >
-            🔐 Local
-          </button>
-
-
-          <button
-            className="save-button"
-            onClick={
-              handleEncryptedBackup
-            }
-
-            disabled={
-              !localEncryptionEnabled
-            }
-          >
-            Backup
-          </button>
-
-
-          <button
-            className="save-button"
-            onClick={
-              handleEncryptedRestore
-            }
-          >
-            Restore
-          </button>
-
-
-          <button
-            className="save-button"
-            onClick={
-              handleSave
-            }
-          >
-            Save
-          </button>
-
-
-          <button
-            className="run-button"
-            onClick={
-              handleRunCode
-            }
-
-            disabled={
-              running
-            }
-          >
-            {running
-              ? "Running..."
-              : "▶ Run"}
-          </button>
-
         </div>
 
-      </header>
-
+      </div>
 
       {/* ====================================
-          MAIN LAYOUT
-          ==================================== */}
+          FILE TABS
+      ==================================== */}
 
-      <div className="editor-layout">
+      <div className="synccode-tabsbar">
 
-        {/* ==================================
-            FILE EXPLORER
-            ================================== */}
-
-        <FileExplorer
-          files={
-            fileList
-          }
-
-          activeFile={
-            activeFile
-          }
-
+        <FileTabs
+          files={fileList}
+          activeFile={activeFile}
           onFileSelect={
             setActiveFile
           }
-
-          onCreateFile={
-            handleCreateFile
-          }
-
-          onDeleteFile={
+          onFileClose={
             handleDeleteFile
-          }
-
-          onRenameFile={
-            handleRenameFile
           }
         />
 
+        <div className="tabsbar-meta">
 
-        {/* ==================================
-            MAIN EDITOR
-            ================================== */}
+          <span>
+            {Object.keys(files).length}
+            {" "}
+            files
+          </span>
 
-        <section
-          className="editor-main"
-        >
+          <span>
+            Rev {projectRevision}
+          </span>
 
-          <FileTabs
-            files={
-              fileList
-            }
+        </div>
 
-            activeFile={
-              activeFile
-            }
+      </div>
 
-            onFileSelect={
-              setActiveFile
-            }
-          />
+      {/* ====================================
+          MAIN WORKSPACE
+      ==================================== */}
 
+      <main
+        className={
+          "synccode-workspace " +
+          (
+            aiOpen
+              ? "ai-visible "
+              : ""
+          ) +
+          (
+            versionOpen
+              ? "versions-visible"
+              : ""
+          )
+        }
+      >
 
-          <div
-            className="editor-container"
-          >
+        {/* LEFT SIDEBAR */}
+
+        <aside className="synccode-sidebar">
+
+          <div className="sidebar-header">
+            <span>EXPLORER</span>
+
+            <span className="sidebar-count">
+              {Object.keys(files).length}
+            </span>
+          </div>
+
+          <div className="sidebar-content">
+
+            <FileExplorer
+              files={fileList}
+              activeFile={
+                activeFile
+              }
+              onFileSelect={
+                setActiveFile
+              }
+              onCreateFile={
+                handleCreateFile
+              }
+              onDeleteFile={
+                handleDeleteFile
+              }
+              onRenameFile={
+                handleRenameFile
+              }
+            />
+
+          </div>
+
+          <div className="sidebar-users">
+
+            <div className="sidebar-header">
+              <span>COLLABORATORS</span>
+
+              <span className="sidebar-count">
+                {onlineUsers.length}
+              </span>
+            </div>
+
+            <UserList
+              users={
+                onlineUsers
+              }
+            />
+
+          </div>
+
+        </aside>
+
+        {/* CENTER EDITOR */}
+
+        <section className="synccode-editor-center">
+
+          <div className="editor-titlebar">
+
+            <div className="editor-file-info">
+
+              {/* <span className="editor-file-icon">
+                {currentFile?.language
+                  ?.toUpperCase() ||
+                  "TXT"}
+              </span> */}
+
+              <span>
+                {activeFile}
+              </span>
+
+            </div>
+
+            <div className="editor-meta">
+
+              <span>
+                {currentFile?.language ||
+                  "plaintext"}
+              </span>
+
+              <span>
+                {currentFile
+                  ?.content?.length || 0}
+                {" "}
+                chars
+              </span>
+
+            </div>
+
+          </div>
+
+          <div className="synccode-monaco-wrapper">
 
             {currentFile ? (
-
               <CodeEditor
                 value={
-                  currentFile.content
+                  currentFile.content ||
+                  ""
                 }
-
                 language={
-                  currentFile.language
+                  currentFile.language ||
+                  getLanguageFromFileName(
+                    activeFile
+                  ) ||
+                  "plaintext"
                 }
-
                 onChange={
                   handleCodeChange
                 }
-
-                socket={
-                  socket
-                }
-
-                user={
-                  user
-                }
-
                 fileName={
                   activeFile
                 }
               />
-
             ) : (
+              <div className="empty-editor">
+                <div className="empty-editor-icon">
+                  {"</>"}
+                </div>
 
-              <div
-                className="empty-files"
-              >
-                No file selected
+                <h3>
+                  No file selected
+                </h3>
+
+                <p>
+                  Select a file from the
+                  explorer to start editing.
+                </p>
               </div>
-
             )}
 
           </div>
 
+          {/* OUTPUT */}
 
-          <OutputConsole
-            output={
-              output
-            }
+          {outputOpen && (
+            <div className="synccode-output">
 
-            input={
-              input
-            }
+              <div className="output-header">
 
-            setInput={
-              setInput
-            }
-          />
+                <div className="output-title">
+                  <span>
+                    TERMINAL
+                  </span>
+
+                  <span className="output-status">
+                    {running
+                      ? "Running..."
+                      : "Ready"}
+                  </span>
+                </div>
+
+                <div className="output-actions">
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOutput("")
+                    }
+                  >
+                    Clear
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOutputOpen(
+                        false
+                      )
+                    }
+                  >
+                    Hide
+                  </button>
+
+                </div>
+
+              </div>
+
+              <OutputConsole
+                output={output}
+                input={input}
+                setInput={setInput}
+              />
+
+            </div>
+          )}
+
+          {!outputOpen && (
+            <button
+              type="button"
+              className="show-output-btn"
+              onClick={() =>
+                setOutputOpen(
+                  true
+                )
+              }
+            >
+              ↑ Show Terminal
+            </button>
+          )}
 
         </section>
 
+        {/* RIGHT AI PANEL */}
 
-        {/* ==================================
-            VERSION HISTORY
-            ================================== */}
+        {aiOpen && (
+          <aside className="synccode-ai-sidebar">
 
-        <VersionHistory
-          versions={
-            versions
-          }
+            <div className="right-panel-header">
 
-          onRestore={
-            handleRestore
-          }
-        />
+              <div>
+                <span className="right-panel-title">
+                  AI ASSISTANT
+                </span>
 
+                <span className="right-panel-subtitle">
+                  Code intelligence
+                </span>
+              </div>
 
-        {/* ==================================
-            USERS
-            ================================== */}
+              <button
+                type="button"
+                className="panel-close-btn"
+                onClick={() =>
+                  setAiOpen(false)
+                }
+                title="Close AI"
+              >
+                ×
+              </button>
 
-        <UserList
-          users={
-            onlineUsers
-          }
+            </div>
 
-          currentUser={
-            user
-          }
-        />
+            <div className="right-panel-content">
 
-      </div>
+              <AIPanel
+                code={
+                  currentFile?.content ||
+                  ""
+                }
+                language={
+                  currentFile?.language ||
+                  getLanguageFromFileName(
+                    activeFile
+                  ) ||
+                  "plaintext"
+                }
+              />
+              <AIReviewPanel
+  code={
+    currentFile?.content || ""
+  }
+  language={
+    currentFile?.language ||
+    getLanguageFromFileName(
+      activeFile
+    ) ||
+    "plaintext"
+  }
+/>
+<AIBugDetector
+  code={
+    currentFile?.content || ""
+  }
+  language={
+    currentFile?.language ||
+    getLanguageFromFileName(
+      activeFile
+    ) ||
+    "plaintext"
+  }
+/>
+<AITestGenerator
+  code={
+    currentFile?.content || ""
+  }
+  language={
+    currentFile?.language ||
+    getLanguageFromFileName(
+      activeFile
+    ) ||
+    "plaintext"
+  }
+/>
+<AIAgentPlanner
+  code={
+    currentFile?.content || ""
+  }
+  language={
+    currentFile?.language ||
+    getLanguageFromFileName(
+      activeFile
+    ) ||
+    "plaintext"
+  }
+/>
+<AIAgentWorkflow
+  code={
+    currentFile?.content || ""
+  }
+  language={
+    currentFile?.language ||
+    getLanguageFromFileName(
+      activeFile
+    ) ||
+    "plaintext"
+  }
+/>
+<AIDiffViewer
+  code={
+    currentFile?.content || ""
+  }
+  language={
+    currentFile?.language ||
+    getLanguageFromFileName(
+      activeFile
+    ) ||
+    "plaintext"
+  }
+  onApply={(newCode) => {
+    handleCodeChange(newCode);
+  }}
+/>
+
+              <EncryptionStatus
+                enabled={
+                  encryptionEnabled
+                }
+              />
+
+              <SecurityStatus />
+
+            </div>
+
+          </aside>
+        )}
+
+      </main>
+
+      {/* ====================================
+          VERSION DRAWER
+      ==================================== */}
+
+      {versionOpen && (
+        <section className="version-drawer">
+
+          <div className="version-drawer-header">
+
+            <div>
+              <span>
+                VERSION HISTORY
+              </span>
+
+              <span className="version-count">
+                {versions.length}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setVersionOpen(
+                  false
+                )
+              }
+            >
+              ×
+            </button>
+
+          </div>
+
+          <div className="version-drawer-content">
+
+            <VersionHistory
+              versions={versions}
+              onRestore={
+                handleRestoreVersion
+              }
+            />
+
+          </div>
+
+        </section>
+      )}
 
     </div>
   );
 }
-
 
 export default Editor;
