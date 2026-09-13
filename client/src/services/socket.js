@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 
 
 const socket = io(
-  "http://localhost:5000",
+  "https://sync-code-next-gen-2.onrender.com",
   {
     autoConnect: false,
 
