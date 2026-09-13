@@ -44,27 +44,29 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    /*
-     * Allow requests without Origin header
-     * such as curl / server-to-server requests.
-     */
-    if (!origin) {
-      return callback(null, true);
-    }
+  origin: [
+    "http://localhost:5173",
+    "https://sync-code-next-gen-2.vercel.app",
+  ],
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+  ],
 
-    console.warn(
-      `CORS blocked origin: ${origin}`
-    );
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+  ],
 
-    return callback(
-      new Error(`CORS blocked origin: ${origin}`)
-    );
-  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
   methods: [
     "GET",
