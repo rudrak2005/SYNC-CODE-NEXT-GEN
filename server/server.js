@@ -169,13 +169,11 @@ SOCKET.IO
 
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
-
-    methods: [
-      "GET",
-      "POST",
+    origin: [
+      "http://localhost:5173",
+      "https://sync-code-next-gen-2.vercel.app",
     ],
-
+    methods: ["GET", "POST"],
     credentials: true,
   },
 });
