@@ -26,7 +26,7 @@ CORS
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://sync-code-next-gen-2.vercel.app",
+  "https://sync-code-next-gen.vercel.app",
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
