@@ -204,3 +204,10 @@ httpServer.listen(
     );
   }
 );
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "SyncCode API is running",
+    origin: req.headers.origin || null,
+  });
+});
