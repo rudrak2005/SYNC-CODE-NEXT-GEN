@@ -1739,102 +1739,210 @@ const handleRunCode = useCallback(async () => {
   ======================================== */
 
   const handleRestoreVersion =
-    useCallback(
-      async (version) => {
-        if (!version) return;
+  useCallback(
+    async (revision) => {
+      if (!roomId || revision === undefined) {
+        return;
+      }
 
-        try {
-          const restored =
-            await restoreSnapshot(
-              roomId,
-              version._id ||
-                version.id
-            );
+      try {
+        /* =================================
+           FIND VERSION OBJECT
+        ================================= */
 
-          const restoredFiles =
-            restored?.files ||
-            restored?.project
-              ?.files;
-
-          if (
-            !Array.isArray(
-              restoredFiles
-            )
-          ) {
-            return;
-          }
-
-          const mapped = {};
-
-          restoredFiles.forEach(
-            (file) => {
-              if (!file?.name) {
-                return;
-              }
-
-              mapped[file.name] = {
-                language:
-                  file.language ||
-                  "plaintext",
-
-                content:
-                  file.content ||
-                  "",
-              };
-            }
+        const selectedVersion =
+          versions.find(
+            (version) =>
+              Number(version.revision) ===
+              Number(revision)
           );
 
-          setFiles(mapped);
-
-          setActiveFile(
-            Object.keys(
-              mapped
-            )[0] || ""
-          );
-
-          if (
-            typeof restored?.revision ===
-              "number"
-          ) {
-            setProjectRevision(
-              restored.revision
-            );
-          }
-
-          clearRecoverySnapshot(
-            roomId
-          );
-
-          if (
-            socket.connected
-          ) {
-            socket.emit(
-              "project:restore",
-              {
-                roomId,
-                files:
-                  restoredFiles,
-              }
-            );
-          }
-
-          await loadVersions();
-        } catch (error) {
-          console.error(
-            "Version restore failed:",
-            error
-          );
-
+        if (!selectedVersion) {
           window.alert(
-            "Version restore failed."
+            "Selected version was not found."
+          );
+
+          return;
+        }
+
+        /* =================================
+           VERSION ID
+        ================================= */
+
+        const versionId =
+          selectedVersion._id ||
+          selectedVersion.id;
+
+        if (!versionId) {
+          window.alert(
+            "Version ID is missing."
+          );
+
+          return;
+        }
+
+        console.log(
+          "Restoring version:",
+          revision,
+          versionId
+        );
+
+        /* =================================
+           RESTORE SNAPSHOT
+        ================================= */
+
+        const restored =
+          await restoreSnapshot(
+            roomId,
+            versionId
+          );
+
+        console.log(
+          "Restore response:",
+          restored
+        );
+
+        /* =================================
+           GET FILES
+        ================================= */
+
+        const restoredFiles =
+          restored?.files ||
+          restored?.project?.files;
+
+        if (
+          !Array.isArray(
+            restoredFiles
+          )
+        ) {
+          throw new Error(
+            "Restored project files were not returned."
           );
         }
-      },
-      [
-        roomId,
-        loadVersions,
-      ]
-    );
+
+        /* =================================
+           MAP FILES
+        ================================= */
+
+        const mapped = {};
+
+        restoredFiles.forEach(
+          (file) => {
+            if (!file?.name) {
+              return;
+            }
+
+            mapped[file.name] = {
+              language:
+                file.language ||
+                getLanguageFromFileName(
+                  file.name
+                ) ||
+                "plaintext",
+
+              content:
+                file.content || "",
+            };
+          }
+        );
+
+        if (
+          Object.keys(mapped).length === 0
+        ) {
+          throw new Error(
+            "Restored version contains no files."
+          );
+        }
+
+        /* =================================
+           UPDATE EDITOR
+        ================================= */
+
+        setFiles(mapped);
+
+        setActiveFile(
+          Object.keys(mapped)[0] || ""
+        );
+
+        /* =================================
+           UPDATE REVISION
+        ================================= */
+
+        if (
+          typeof restored?.revision ===
+          "number"
+        ) {
+          setProjectRevision(
+            restored.revision
+          );
+        } else {
+          setProjectRevision(
+            Number(revision)
+          );
+        }
+
+        /* =================================
+           CLEAR RECOVERY
+        ================================= */
+
+        clearRecoverySnapshot(
+          roomId
+        );
+
+        /* =================================
+           BROADCAST RESTORE
+        ================================= */
+
+        if (socket.connected) {
+          socket.emit(
+            "project:restore",
+            {
+              roomId,
+              files: restoredFiles,
+              revision:
+                restored?.revision ??
+                revision,
+            }
+          );
+        }
+
+        /* =================================
+           RELOAD VERSIONS
+        ================================= */
+
+        await loadVersions();
+
+        /* =================================
+           CLOSE VERSION PANEL
+        ================================= */
+
+        setVersionOpen(false);
+
+      } catch (error) {
+        console.error(
+          "Version restore failed:",
+          error
+        );
+
+        console.error(
+          "Restore server response:",
+          error?.response?.data
+        );
+
+        window.alert(
+          error?.response?.data?.message ||
+          error?.message ||
+          "Version restore failed."
+        );
+      }
+    },
+    [
+      roomId,
+      versions,
+      loadVersions,
+    ]
+  );
+        
 
   /* ========================================
      THEME / KEYBOARD SHORTCUTS
@@ -2668,7 +2776,7 @@ const handleRunCode = useCallback(async () => {
 
             <VersionHistory
   versions={versions}
-  onRestore={restoreVersion}
+  onRestore={handleRestoreVersion}
   onClose={() => setVersionOpen(false)}
 />
 
