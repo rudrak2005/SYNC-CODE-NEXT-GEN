@@ -1,0 +1,777 @@
+/* =========================================
+   SYNCCODE NEXTGEN FILE EXPLORER
+========================================= */
+
+.file-explorer {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  min-height: 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      #111827 0%,
+      #0f1625 100%
+    );
+
+  color: #cbd5e1;
+
+  border-right: 1px solid #252d40;
+
+  overflow: hidden;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.explorer-header {
+  height: 44px;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 11px;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.018),
+      transparent
+    );
+}
+
+.explorer-title-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.explorer-title {
+  font-family: "JetBrains Mono", monospace;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.6px;
+
+  color: #cbd5e1;
+}
+
+.explorer-count {
+  min-width: 18px;
+  height: 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 5px;
+
+  border-radius: 5px;
+
+  background: rgba(124, 58, 237, 0.1);
+
+  border: 1px solid rgba(124, 58, 237, 0.14);
+
+  color: #a78bfa;
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.explorer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.explorer-header-button {
+  width: 25px;
+  height: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid transparent;
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: #64748b;
+
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.explorer-header-button:hover {
+  color: #e2e8f0;
+
+  background: rgba(124, 58, 237, 0.1);
+
+  border-color: rgba(124, 58, 237, 0.15);
+}
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.explorer-search {
+  position: relative;
+
+  height: 31px;
+
+  display: flex;
+  align-items: center;
+
+  margin: 9px 9px 7px;
+
+  border: 1px solid rgba(148, 163, 184, 0.09);
+  border-radius: 7px;
+
+  background:
+    rgba(7, 12, 24, 0.48);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.explorer-search:focus-within {
+  border-color: rgba(124, 58, 237, 0.35);
+
+  box-shadow:
+    0 0 0 2px rgba(124, 58, 237, 0.06);
+}
+
+.explorer-search-icon {
+  flex: 0 0 auto;
+
+  padding-left: 9px;
+
+  color: #64748b;
+
+  font-size: 12px;
+}
+
+.explorer-search input {
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+
+  padding: 0 7px;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #cbd5e1;
+
+  font-family: "Inter", sans-serif;
+  font-size: 9px;
+}
+
+.explorer-search input::placeholder {
+  color: #475569;
+}
+
+.explorer-search-clear {
+  flex: 0 0 auto;
+
+  width: 22px;
+  height: 22px;
+
+  margin-right: 4px;
+
+  border: 0;
+  border-radius: 5px;
+
+  background: transparent;
+
+  color: #64748b;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+.explorer-search-clear:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+}
+
+
+/* =========================================
+   SECTION HEADER
+========================================= */
+
+.explorer-section-header {
+  height: 25px;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 10px;
+
+  color: #64748b;
+
+  font-family: "JetBrains Mono", monospace;
+
+  font-size: 7px;
+  font-weight: 700;
+
+  letter-spacing: 1px;
+}
+
+.explorer-section-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.explorer-chevron {
+  font-size: 10px;
+  color: #475569;
+}
+
+.explorer-section-count {
+  color: #475569;
+
+  font-size: 7px;
+}
+
+
+/* =========================================
+   FILE LIST
+========================================= */
+
+.file-list {
+  flex: 1;
+  min-height: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  padding: 2px 5px 8px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #2c3549 transparent;
+}
+
+.file-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.file-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+  background: #2c3549;
+  border-radius: 999px;
+}
+
+
+/* =========================================
+   FILE ITEM
+========================================= */
+
+.file-item-wrapper {
+  position: relative;
+
+  width: 100%;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+
+  margin: 2px 0;
+
+  border-radius: 7px;
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.file-item-wrapper:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.file-item-wrapper.active {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(124, 58, 237, 0.16),
+      rgba(124, 58, 237, 0.045)
+    );
+}
+
+.file-item-wrapper.active::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+
+  width: 2px;
+
+  border-radius: 0 3px 3px 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      #7c3aed,
+      #06b6d4
+    );
+
+  box-shadow:
+    0 0 9px rgba(124, 58, 237, 0.5);
+}
+
+
+/* =========================================
+   FILE BUTTON
+========================================= */
+
+.file-item {
+  min-width: 0;
+  flex: 1;
+
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 7px 0 10px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #7f8da3;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition: color 0.18s ease;
+}
+
+.file-item:hover,
+.file-item.active {
+  color: #e2e8f0;
+}
+
+
+/* =========================================
+   FILE ICON
+========================================= */
+
+.file-icon {
+  flex: 0 0 auto;
+
+  width: 19px;
+  height: 19px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 5px;
+
+  background: rgba(148, 163, 184, 0.055);
+  border: 1px solid rgba(148, 163, 184, 0.07);
+
+  font-family: "JetBrains Mono", monospace;
+
+  font-size: 6px;
+  font-weight: 800;
+
+  letter-spacing: -0.3px;
+
+  color: #94a3b8;
+}
+
+.file-item.active .file-icon {
+  background: rgba(124, 58, 237, 0.13);
+  border-color: rgba(124, 58, 237, 0.19);
+
+  box-shadow:
+    0 0 10px rgba(124, 58, 237, 0.08);
+}
+
+
+/* =========================================
+   FILE TYPE COLORS
+========================================= */
+
+.file-icon-javascript,
+.file-icon-typescript {
+  color: #eab308;
+}
+
+.file-icon-react {
+  color: #22d3ee;
+}
+
+.file-icon-html {
+  color: #f97316;
+}
+
+.file-icon-css {
+  color: #60a5fa;
+}
+
+.file-icon-json {
+  color: #facc15;
+}
+
+.file-icon-python {
+  color: #38bdf8;
+}
+
+.file-icon-cpp,
+.file-icon-c {
+  color: #818cf8;
+}
+
+.file-icon-java {
+  color: #fb7185;
+}
+
+.file-icon-rust {
+  color: #fb923c;
+}
+
+.file-icon-go {
+  color: #22d3ee;
+}
+
+.file-icon-php {
+  color: #a78bfa;
+}
+
+.file-icon-env {
+  color: #84cc16;
+}
+
+.file-icon-git {
+  color: #f97316;
+}
+
+
+/* =========================================
+   FILE NAME
+========================================= */
+
+.file-name {
+  min-width: 0;
+  flex: 1;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  font-family: "Inter", sans-serif;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+
+/* =========================================
+   MODIFIED
+========================================= */
+
+.file-modified {
+  flex: 0 0 auto;
+
+  color: #f59e0b;
+
+  font-size: 14px;
+  line-height: 1;
+
+  text-shadow:
+    0 0 7px rgba(245, 158, 11, 0.55);
+}
+
+
+/* =========================================
+   ACTION BUTTONS
+========================================= */
+
+.file-actions {
+  position: absolute;
+
+  right: 5px;
+
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  padding: 2px;
+
+  border-radius: 6px;
+
+  background:
+    rgba(15, 22, 37, 0.94);
+
+  border: 1px solid rgba(148, 163, 184, 0.08);
+
+  opacity: 0;
+
+  transform: translateX(4px);
+
+  pointer-events: none;
+
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+
+.file-item-wrapper:hover .file-actions,
+.file-item-wrapper.active .file-actions {
+  opacity: 1;
+
+  transform: translateX(0);
+
+  pointer-events: auto;
+}
+
+.file-action {
+  width: 22px;
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 5px;
+
+  background: transparent;
+
+  color: #64748b;
+
+  cursor: pointer;
+
+  font-size: 11px;
+
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.file-action.rename:hover {
+  color: #c4b5fd;
+  background: rgba(124, 58, 237, 0.12);
+}
+
+.file-action.delete:hover {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+
+.empty-files {
+  min-height: 160px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 20px 10px;
+
+  color: #475569;
+
+  text-align: center;
+}
+
+.empty-files-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: rgba(124, 58, 237, 0.055);
+
+  border: 1px solid rgba(124, 58, 237, 0.1);
+
+  color: #7c3aed;
+
+  font-size: 16px;
+}
+
+.empty-files span {
+  font-family: "Inter", sans-serif;
+
+  font-size: 9px;
+}
+
+.empty-files button {
+  margin-top: 2px;
+
+  padding: 6px 10px;
+
+  border: 1px solid rgba(124, 58, 237, 0.17);
+  border-radius: 6px;
+
+  background: rgba(124, 58, 237, 0.08);
+
+  color: #a78bfa;
+
+  font-family: "Inter", sans-serif;
+
+  font-size: 8px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.empty-files button:hover {
+  background: rgba(124, 58, 237, 0.14);
+  border-color: rgba(124, 58, 237, 0.28);
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+.explorer-footer {
+  height: 31px;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 9px;
+
+  border-top: 1px solid rgba(148, 163, 184, 0.07);
+
+  background:
+    rgba(7, 12, 24, 0.35);
+}
+
+.explorer-footer-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: #475569;
+
+  font-family: "JetBrains Mono", monospace;
+
+  font-size: 7px;
+}
+
+.explorer-status-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 7px rgba(34, 197, 94, 0.45);
+}
+
+.explorer-footer-count {
+  color: #475569;
+
+  font-family: "JetBrains Mono", monospace;
+
+  font-size: 7px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+  .explorer-header {
+    padding: 0 8px;
+  }
+
+  .explorer-search {
+    margin-left: 7px;
+    margin-right: 7px;
+  }
+
+  .file-item {
+    padding-left: 8px;
+  }
+
+  .file-actions {
+    right: 3px;
+  }
+}
+
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .file-item-wrapper,
+  .file-action,
+  .file-item,
+  .file-actions,
+  .explorer-search,
+  .explorer-header-button {
+    transition: none;
+  }
+}
