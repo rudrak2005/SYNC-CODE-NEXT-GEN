@@ -925,10 +925,10 @@ function Editor() {
       handleConnect
     );
 
-    socket.on(
-      "code:change",
-      handleCodeUpdate
-    );
+  socket.on(
+  "code:update",
+  handleCodeUpdate
+);
 
     socket.on(
       "file:created",
@@ -971,9 +971,9 @@ function Editor() {
       );
 
       socket.off(
-        "code:change",
-        handleCodeUpdate
-      );
+  "code:update",
+  handleCodeUpdate
+);
 
       socket.off(
         "file:created",
