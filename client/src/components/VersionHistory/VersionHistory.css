@@ -1,6 +1,6 @@
 /* =========================================
-   SYNCCODE NEXTGEN VERSION HISTORY
-   RIGHT-SIDE DRAWER
+   SYNCCODE NEXTGEN
+   VERSION HISTORY DRAWER
 ========================================= */
 
 .version-history-panel {
@@ -11,10 +11,12 @@
   bottom: 0;
 
   width: 350px;
-  max-width: min(350px, 92vw);
+  max-width: 92vw;
 
   display: flex;
   flex-direction: column;
+
+  overflow: hidden;
 
   background:
     linear-gradient(
@@ -23,23 +25,26 @@
       #0d1422 100%
     );
 
-  border-left: 1px solid rgba(124, 58, 237, 0.2);
+  border-left: 1px solid rgba(124, 58, 237, 0.22);
 
   box-shadow:
-    -20px 0 55px rgba(0, 0, 0, 0.36),
-    -1px 0 18px rgba(124, 58, 237, 0.05);
+    -25px 0 60px rgba(0, 0, 0, 0.38),
+    -1px 0 20px rgba(124, 58, 237, 0.06);
 
-  z-index: 500;
+  z-index: 900;
 
-  overflow: hidden;
-
-  animation: versionHistoryIn 0.22s ease-out;
+  animation: versionHistorySlideIn 0.22s ease-out;
 }
 
-@keyframes versionHistoryIn {
+
+/* =========================================
+   OPEN ANIMATION
+========================================= */
+
+@keyframes versionHistorySlideIn {
   from {
     opacity: 0;
-    transform: translateX(18px);
+    transform: translateX(22px);
   }
 
   to {
@@ -54,116 +59,162 @@
 ========================================= */
 
 .version-history-header {
-  flex: 0 0 auto;
-
   min-height: 68px;
+
+  flex: 0 0 auto;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  padding: 0 15px;
-
-  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  padding: 0 14px 0 15px;
 
   background:
     linear-gradient(
       180deg,
       rgba(255, 255, 255, 0.025),
-      transparent
+      rgba(255, 255, 255, 0)
     );
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
 }
 
+
+/* =========================================
+   TITLE
+========================================= */
+
 .version-history-title {
+  min-width: 0;
+
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .version-history-title-icon {
-  width: 35px;
-  height: 35px;
+  width: 36px;
+  height: 36px;
+
+  flex: 0 0 auto;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 9px;
+  border-radius: 10px;
 
   background:
     linear-gradient(
       135deg,
-      rgba(124, 58, 237, 0.16),
+      rgba(124, 58, 237, 0.18),
       rgba(6, 182, 212, 0.08)
     );
 
-  border: 1px solid rgba(124, 58, 237, 0.16);
+  border: 1px solid rgba(124, 58, 237, 0.17);
 
   color: #a78bfa;
 
   font-size: 18px;
 
   box-shadow:
-    0 0 18px rgba(124, 58, 237, 0.08);
+    0 0 20px rgba(124, 58, 237, 0.08);
 }
 
-.version-history-title h3 {
+.version-history-title-text {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.version-history-title-text h3 {
   margin: 0;
 
   color: #f1f5f9;
 
-  font-family: "Poppins", "Inter", sans-serif;
+  font-family:
+    "Poppins",
+    "Inter",
+    sans-serif;
 
   font-size: 12px;
   font-weight: 700;
+
+  line-height: 1.2;
 }
 
-.version-history-title span {
-  display: block;
-
-  margin-top: 3px;
+.version-history-title-text span {
+  margin-top: 4px;
 
   color: #64748b;
 
-  font-family: "JetBrains Mono", monospace;
+  font-family:
+    "JetBrains Mono",
+    monospace;
 
   font-size: 7px;
-
-  letter-spacing: 0.3px;
 }
 
+
+/* =========================================
+   CLOSE BUTTON
+========================================= */
+
 .version-history-close {
-  width: 29px;
-  height: 29px;
+  width: 31px;
+  height: 31px;
+
+  flex: 0 0 auto;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 1px solid rgba(148, 163, 184, 0.08);
-  border-radius: 7px;
+  margin-left: 10px;
 
-  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 8px;
 
-  color: #64748b;
+  background:
+    rgba(255, 255, 255, 0.025);
 
-  font-size: 18px;
+  color: #94a3b8;
+
+  font-family:
+    "Inter",
+    sans-serif;
+
+  font-size: 21px;
+  font-weight: 400;
+
   line-height: 1;
 
   cursor: pointer;
 
   transition:
-    color 0.18s ease,
-    background 0.18s ease,
-    border-color 0.18s ease;
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .version-history-close:hover {
-  color: #f1f5f9;
+  color: #f87171;
 
-  background: rgba(239, 68, 68, 0.08);
+  background:
+    rgba(239, 68, 68, 0.1);
 
-  border-color: rgba(239, 68, 68, 0.16);
+  border-color:
+    rgba(239, 68, 68, 0.2);
+
+  transform: rotate(90deg);
+}
+
+.version-history-close:active {
+  transform:
+    rotate(90deg)
+    scale(0.92);
 }
 
 
@@ -176,11 +227,14 @@
   min-height: 0;
 
   overflow-y: auto;
+  overflow-x: hidden;
 
   padding: 15px 13px;
 
   scrollbar-width: thin;
-  scrollbar-color: #30394d transparent;
+  scrollbar-color:
+    #30394d
+    transparent;
 }
 
 .version-history-body::-webkit-scrollbar {
@@ -209,11 +263,9 @@
 }
 
 .version-item {
-  position: relative;
-
   display: grid;
 
-  grid-template-columns: 19px 1fr;
+  grid-template-columns: 19px minmax(0, 1fr);
 
   gap: 8px;
 
@@ -232,7 +284,7 @@
 
   position: absolute;
 
-  top: 13px;
+  top: 14px;
   bottom: -13px;
 
   width: 1px;
@@ -266,15 +318,15 @@
   border: 2px solid #121826;
 
   box-shadow:
-    0 0 0 1px rgba(148, 163, 184, 0.16);
+    0 0 0 1px rgba(148, 163, 184, 0.14);
 }
 
 .version-item.latest .version-dot {
   background: #8b5cf6;
 
   box-shadow:
-    0 0 0 1px rgba(139, 92, 246, 0.28),
-    0 0 12px rgba(139, 92, 246, 0.45);
+    0 0 0 1px rgba(139, 92, 246, 0.3),
+    0 0 13px rgba(139, 92, 246, 0.45);
 }
 
 
@@ -283,6 +335,8 @@
 ========================================= */
 
 .version-card {
+  min-width: 0;
+
   padding: 11px;
 
   border: 1px solid rgba(148, 163, 184, 0.08);
@@ -291,16 +345,16 @@
   background:
     linear-gradient(
       145deg,
-      rgba(27, 34, 53, 0.95),
-      rgba(18, 24, 38, 0.95)
+      rgba(27, 34, 53, 0.96),
+      rgba(18, 24, 38, 0.96)
     );
 
   box-shadow:
-    0 6px 22px rgba(0, 0, 0, 0.12);
+    0 7px 22px rgba(0, 0, 0, 0.13);
 
   transition:
-    transform 0.18s ease,
     border-color 0.18s ease,
+    transform 0.18s ease,
     background 0.18s ease;
 }
 
@@ -328,7 +382,7 @@
   align-items: center;
   justify-content: space-between;
 
-  gap: 8px;
+  gap: 7px;
 }
 
 .version-revision {
@@ -337,39 +391,56 @@
   display: flex;
   align-items: center;
   gap: 5px;
-
-  color: #e2e8f0;
 }
 
 .revision-hash {
   color: #8b5cf6;
 
-  font-family: "JetBrains Mono", monospace;
+  font-family:
+    "JetBrains Mono",
+    monospace;
 
   font-size: 10px;
 }
 
 .version-revision strong {
-  font-family: "Inter", sans-serif;
+  overflow: hidden;
+
+  color: #e2e8f0;
+
+  font-family:
+    "Inter",
+    sans-serif;
 
   font-size: 10px;
   font-weight: 650;
 
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
+
+/* =========================================
+   LATEST BADGE
+========================================= */
+
 .latest-badge {
+  flex: 0 0 auto;
+
   padding: 3px 6px;
 
   border-radius: 5px;
 
-  background: rgba(34, 197, 94, 0.08);
+  background:
+    rgba(34, 197, 94, 0.08);
 
   border: 1px solid rgba(34, 197, 94, 0.13);
 
   color: #86efac;
 
-  font-family: "JetBrains Mono", monospace;
+  font-family:
+    "JetBrains Mono",
+    monospace;
 
   font-size: 6px;
   font-weight: 800;
@@ -403,7 +474,9 @@
 
   color: #94a3b8;
 
-  font-family: "Inter", sans-serif;
+  font-family:
+    "Inter",
+    sans-serif;
 
   font-size: 8px;
 
@@ -430,7 +503,9 @@
 
   color: #64748b;
 
-  font-family: "JetBrains Mono", monospace;
+  font-family:
+    "JetBrains Mono",
+    monospace;
 
   font-size: 7px;
 }
@@ -440,7 +515,9 @@
 
   color: #475569;
 
-  font-family: "JetBrains Mono", monospace;
+  font-family:
+    "JetBrains Mono",
+    monospace;
 
   font-size: 7px;
 }
@@ -452,7 +529,6 @@
 
 .version-restore-btn {
   width: 100%;
-
   min-height: 31px;
 
   display: flex;
@@ -470,7 +546,9 @@
 
   color: #a78bfa;
 
-  font-family: "Inter", sans-serif;
+  font-family:
+    "Inter",
+    sans-serif;
 
   font-size: 8px;
   font-weight: 600;
@@ -506,7 +584,7 @@
 
 
 /* =========================================
-   EMPTY
+   EMPTY STATE
 ========================================= */
 
 .version-history-empty {
@@ -547,7 +625,9 @@
 .version-history-empty strong {
   color: #cbd5e1;
 
-  font-family: "Inter", sans-serif;
+  font-family:
+    "Inter",
+    sans-serif;
 
   font-size: 10px;
 }
@@ -557,7 +637,9 @@
 
   color: #475569;
 
-  font-family: "Inter", sans-serif;
+  font-family:
+    "Inter",
+    sans-serif;
 
   font-size: 8px;
 
@@ -587,20 +669,22 @@
 
   color: #475569;
 
-  font-family: "JetBrains Mono", monospace;
+  font-family:
+    "JetBrains Mono",
+    monospace;
 
   font-size: 6px;
 
   letter-spacing: 0.7px;
 }
 
-.version-history-footer > span:first-child {
+.version-footer-status {
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
-.footer-dot {
+.footer-status-dot {
   width: 5px;
   height: 5px;
 
@@ -610,6 +694,10 @@
 
   box-shadow:
     0 0 7px rgba(34, 197, 94, 0.45);
+}
+
+.version-footer-tag {
+  color: #334155;
 }
 
 
@@ -630,11 +718,20 @@
   }
 }
 
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
 @media (prefers-reduced-motion: reduce) {
   .version-history-panel,
   .version-card,
   .version-restore-btn {
     animation: none;
+    transition: none;
+  }
+
+  .version-history-close {
     transition: none;
   }
 }
