@@ -24,8 +24,10 @@ function CodeEditor({
   socket,
   user,
   fileName,
+  themeMode = "dark",
 }) {
   const editorRef = useRef(null);
+  const monacoRef = useRef(null);
 
   /*
    * Keep latest props available to socket/cursor callbacks.
@@ -298,6 +300,8 @@ function CodeEditor({
    * ========================================
    */
   const handleBeforeMount = useCallback((monaco) => {
+    monacoRef.current = monaco;
+
     /*
      * Disable default word based suggestions in places
      * where they become noisy. Language services still work.
@@ -306,23 +310,10 @@ function CodeEditor({
       base: "vs-dark",
       inherit: true,
       rules: [
-        {
-          token: "comment",
-          foreground: "64748B",
-          fontStyle: "italic",
-        },
-        {
-          token: "keyword",
-          foreground: "C084FC",
-        },
-        {
-          token: "string",
-          foreground: "86EFAC",
-        },
-        {
-          token: "number",
-          foreground: "67E8F9",
-        },
+        { token: "comment", foreground: "64748B", fontStyle: "italic" },
+        { token: "keyword", foreground: "C084FC" },
+        { token: "string", foreground: "86EFAC" },
+        { token: "number", foreground: "67E8F9" },
       ],
       colors: {
         "editor.background": "#0B1020",
@@ -359,8 +350,57 @@ function CodeEditor({
       },
     });
 
-    monaco.editor.setTheme("syncCodeDark");
-  }, []);
+    monaco.editor.defineTheme("syncCodeLight", {
+      base: "vs",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "64748B", fontStyle: "italic" },
+        { token: "keyword", foreground: "6D28D9" },
+        { token: "string", foreground: "15803D" },
+        { token: "number", foreground: "0369A1" },
+      ],
+      colors: {
+        "editor.background": "#F8FAFC",
+        "editor.foreground": "#1E293B",
+        "editorLineNumber.foreground": "#94A3B8",
+        "editorLineNumber.activeForeground": "#475569",
+        "editorCursor.foreground": "#7C3AED",
+        "editor.selectionBackground": "#DDD6FEAA",
+        "editor.inactiveSelectionBackground": "#EDE9FE99",
+        "editor.lineHighlightBackground": "#F1F5F9",
+        "editorLineNumber.border": "#00000000",
+        "editorGutter.background": "#F8FAFC",
+        "editorIndentGuide.background": "#E2E8F0",
+        "editorIndentGuide.activeBackground": "#CBD5E1",
+        "editorWhitespace.foreground": "#CBD5E1",
+        "editorBracketMatch.background": "#EDE9FE",
+        "editorBracketMatch.border": "#A78BFA",
+        "editorSuggestWidget.background": "#FFFFFF",
+        "editorSuggestWidget.border": "#E2E8F0",
+        "editorSuggestWidget.foreground": "#1E293B",
+        "editorSuggestWidget.selectedBackground": "#EDE9FE",
+        "editorHoverWidget.background": "#FFFFFF",
+        "editorHoverWidget.border": "#E2E8F0",
+        "editorWidget.background": "#FFFFFF",
+        "editorWidget.border": "#E2E8F0",
+        "editorScrollbarSlider.background": "#CBD5E188",
+        "editorScrollbarSlider.hoverBackground": "#94A3B888",
+        "editorScrollbarSlider.activeBackground": "#64748BAA",
+        "minimap.background": "#F1F5F9",
+        "minimap.selectionHighlight": "#C4B5FD88",
+        "minimapSlider.background": "#94A3B855",
+        "minimapSlider.hoverBackground": "#64748B66",
+        "minimapSlider.activeBackground": "#47556977",
+      },
+    });  }, []);
+
+  useEffect(() => {
+    if (!monacoRef.current) return;
+
+    monacoRef.current.editor.setTheme(
+      themeMode === "light" ? "syncCodeLight" : "syncCodeDark"
+    );
+  }, [themeMode]);
 
   const displayLanguage =
     language || "plaintext";
@@ -411,7 +451,7 @@ function CodeEditor({
         <Editor
           height="100%"
           width="100%"
-          theme="syncCodeDark"
+          theme={themeMode === "light" ? "syncCodeLight" : "syncCodeDark"}
           language={displayLanguage}
           value={value ?? ""}
           onChange={handleEditorChange}
