@@ -224,6 +224,20 @@ function Editor() {
   ] = useState(false);
 
   /* ========================================
+     EDITOR UI / THEME
+  ======================================== */
+
+  const [themeMode, setThemeMode] = useState(() => {
+    try {
+      return localStorage.getItem("syncCodeTheme") || "dark";
+    } catch {
+      return "dark";
+    }
+  });
+
+  const [mobilePanel, setMobilePanel] = useState("editor");
+
+  /* ========================================
      CURRENT FILE
   ======================================== */
 
@@ -1822,8 +1836,52 @@ const handleRunCode = useCallback(async () => {
       ]
     );
 
+  /* ========================================
+     THEME / KEYBOARD SHORTCUTS
+  ======================================== */
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("syncCodeTheme", themeMode);
+    } catch {
+      // Ignore storage failures in restricted browser contexts.
+    }
+  }, [themeMode]);
+
+  useEffect(() => {
+    const handleShortcut = (event) => {
+      const key = event.key.toLowerCase();
+
+      if ((event.ctrlKey || event.metaKey) && key === "s") {
+        event.preventDefault();
+        handleSaveProject();
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        handleRunCode();
+      }
+
+      if (event.key === "Escape") {
+        setMobilePanel("editor");
+      }
+    };
+
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [handleSaveProject, handleRunCode]);
+
+  const toggleTheme = () => {
+    setThemeMode((current) =>
+      current === "dark" ? "light" : "dark"
+    );
+  };
+
   return (
-    <div className="synccode-editor-page">
+    <div
+      className={`synccode-editor-page theme-${themeMode}`}
+      data-theme={themeMode}
+    >
 
       {/* ====================================
           TOP NAVBAR
@@ -1957,6 +2015,17 @@ const handleRunCode = useCallback(async () => {
 
           <button
             type="button"
+            className="toolbar-btn toolbar-theme-btn"
+            onClick={toggleTheme}
+            title={`Switch to ${themeMode === "dark" ? "light" : "dark"} theme`}
+            aria-label="Toggle editor theme"
+          >
+            <span>{themeMode === "dark" ? "☀" : "☾"}</span>
+            <span>{themeMode === "dark" ? "Light" : "Dark"}</span>
+          </button>
+
+          <button
+            type="button"
             className="toolbar-btn toolbar-save-btn"
             onClick={
               handleSaveProject
@@ -1994,6 +2063,43 @@ const handleRunCode = useCallback(async () => {
 
         </div>
       </header>
+
+      <nav className="editor-menubar" aria-label="Editor menu">
+        <div className="editor-menu-left">
+          <button type="button" onClick={handleSaveProject}>
+            File
+          </button>
+          <button
+            type="button"
+            onClick={() => setAiOpen((value) => !value)}
+          >
+            View
+          </button>
+          <button
+            type="button"
+            className="editor-menu-run"
+            onClick={handleRunCode}
+            disabled={running || !currentFile}
+          >
+            Run
+          </button>
+          <button
+            type="button"
+            onClick={() => setOutputOpen((value) => !value)}
+          >
+            Terminal
+          </button>
+          <button type="button" onClick={toggleTheme}>
+            {themeMode === "dark" ? "Light Theme" : "Dark Theme"}
+          </button>
+        </div>
+
+        <div className="editor-menu-right">
+          <span>Ctrl+S Save</span>
+          <span>Ctrl+Enter Run</span>
+          <span>ESC Focus Editor</span>
+        </div>
+      </nav>
 
       {/* ====================================
           SECONDARY NAVBAR
@@ -2082,6 +2188,36 @@ const handleRunCode = useCallback(async () => {
             }
           />
 
+
+
+          <div className="mobile-view-actions">
+            <button
+              type="button"
+              className={`subbar-btn ${mobilePanel === "explorer" ? "subbar-btn-active" : ""}`}
+              onClick={() => setMobilePanel("explorer")}
+            >Files</button>
+            <button
+              type="button"
+              className={`subbar-btn ${mobilePanel === "editor" ? "subbar-btn-active" : ""}`}
+              onClick={() => setMobilePanel("editor")}
+            >Code</button>
+            <button
+              type="button"
+              className={`subbar-btn ${mobilePanel === "terminal" ? "subbar-btn-active" : ""}`}
+              onClick={() => {
+                setMobilePanel("editor");
+                setOutputOpen(true);
+              }}
+            >Terminal</button>
+            <button
+              type="button"
+              className={`subbar-btn ${mobilePanel === "ai" ? "subbar-btn-active" : ""}`}
+              onClick={() => {
+                setMobilePanel("ai");
+                setAiOpen(true);
+              }}
+            >AI</button>
+          </div>
         </div>
 
       </div>
@@ -2126,6 +2262,7 @@ const handleRunCode = useCallback(async () => {
       <main
         className={
           "synccode-workspace " +
+          `mobile-${mobilePanel} ` +
           (
             aiOpen
               ? "ai-visible "
@@ -2141,7 +2278,7 @@ const handleRunCode = useCallback(async () => {
 
         {/* LEFT SIDEBAR */}
 
-        <aside className="synccode-sidebar">
+        <aside className={`synccode-sidebar ${mobilePanel === "explorer" ? "mobile-panel-visible" : ""}`}>
 
           <div className="sidebar-header">
             <span>EXPLORER</span>
@@ -2196,7 +2333,7 @@ const handleRunCode = useCallback(async () => {
 
         {/* CENTER EDITOR */}
 
-        <section className="synccode-editor-center">
+        <section className={`synccode-editor-center ${mobilePanel === "editor" ? "mobile-panel-visible" : ""}`}>
 
           <div className="editor-titlebar">
 
@@ -2244,6 +2381,7 @@ const handleRunCode = useCallback(async () => {
     "plaintext"
   }
   onChange={handleCodeChange}
+  themeMode={themeMode}
   fileName={activeFile}
   socket={socket}
   user={user}
@@ -2273,10 +2411,22 @@ const handleRunCode = useCallback(async () => {
           {outputOpen && (
             <div className="synccode-output">
 
+              <div className="terminal-tabs-bar">
+                <div className="terminal-tabs-left">
+                  <button type="button" className="terminal-tab terminal-tab-active">TERMINAL</button>
+                  <button type="button" className="terminal-tab" onClick={() => setOutput("")}>OUTPUT</button>
+                </div>
+                <div className="terminal-tabs-right">
+                  <span className={`terminal-live-dot ${running ? "is-running" : ""}`} />
+                  <span>{running ? "Running process" : "Ready"}</span>
+                </div>
+              </div>
+
               <div className="output-header">
 
                 <div className="output-title">
-                  <span>
+                  <span className="terminal-title-label">
+                    <span className="terminal-prompt-mark">›_</span>
                     TERMINAL
                   </span>
 
@@ -2313,11 +2463,19 @@ const handleRunCode = useCallback(async () => {
 
               </div>
 
-              <OutputConsole
-                output={output}
-                input={input}
-                setInput={setInput}
-              />
+              <div className="terminal-console-body">
+                <OutputConsole
+                  output={output}
+                  input={input}
+                  setInput={setInput}
+                />
+              </div>
+
+              <div className="terminal-footer-bar">
+                <span>Shell</span>
+                <span className="terminal-footer-path">SyncCode Runtime</span>
+                <span className="terminal-shortcut">Ctrl + Enter Run</span>
+              </div>
 
             </div>
           )}
@@ -2341,7 +2499,7 @@ const handleRunCode = useCallback(async () => {
         {/* RIGHT AI PANEL */}
 
         {aiOpen && (
-          <aside className="synccode-ai-sidebar">
+          <aside className={`synccode-ai-sidebar ${mobilePanel === "ai" ? "mobile-panel-visible" : ""}`}>
 
             <div className="right-panel-header">
 
