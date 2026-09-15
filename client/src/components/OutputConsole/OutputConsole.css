@@ -1,40 +1,676 @@
-.output-console{
-  height:220px;
+/* =========================================================
+   SYNCCODE NEXTGEN
+   PREMIUM TERMINAL
+   VS CODE INSPIRED
+========================================================= */
 
-  background:#111827;
-  border-top:1px solid #333;
+.output-console {
+  --terminal-bg: #080d14;
+  --terminal-surface: #0c131d;
+  --terminal-surface-2: #101925;
+  --terminal-surface-3: #131e2c;
 
-  display:flex;
-  flex-direction:column;
+  --terminal-border: #202b3b;
+  --terminal-border-soft: #182231;
+
+  --terminal-text: #dbe5f0;
+  --terminal-muted: #718096;
+  --terminal-muted-2: #526174;
+
+  --terminal-green: #22c55e;
+  --terminal-green-soft: #86efac;
+
+  --terminal-purple: #a78bfa;
+  --terminal-cyan: #22d3ee;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(124, 58, 237, 0.07),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 95% 100%,
+      rgba(6, 182, 212, 0.045),
+      transparent 28%
+    ),
+    var(--terminal-bg);
+
+  color: var(--terminal-text);
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
-.console-header{
-  padding:10px;
+/* =========================================================
+   TOP BAR
+========================================================= */
 
-  color:#22C55E;
+.terminal-topbar {
+  min-height: 39px;
+  height: 39px;
 
-  border-bottom:1px solid #333;
+  flex: 0 0 39px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #0f1722,
+      #0b121b
+    );
+
+  border-bottom: 1px solid var(--terminal-border);
+
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.015);
 }
 
-.console-input{
-  height:60px;
+.terminal-tabs {
+  height: 100%;
 
-  resize:none;
+  display: flex;
+  align-items: center;
 
-  background:#18181B;
-  color:white;
+  gap: 2px;
 
-  border:none;
-
-  padding:10px;
+  min-width: 0;
 }
 
-.console-output{
-  flex:1;
+.terminal-tab {
+  height: 100%;
 
-  overflow:auto;
+  position: relative;
 
-  padding:12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 
-  color:#22C55E;
+  padding: 0 10px;
+
+  border: 0;
+  border-bottom: 2px solid transparent;
+
+  background: transparent;
+
+  color: #64748b;
+
+  font-size: 10px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition:
+    color 0.16s ease,
+    background 0.16s ease;
+}
+
+.terminal-tab:hover {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.terminal-tab-active {
+  color: #e2e8f0;
+
+  border-bottom-color:
+    var(--terminal-purple);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(124, 58, 237, 0.08),
+      transparent
+    );
+}
+
+.terminal-tab-icon {
+  color: var(--terminal-purple);
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    monospace;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   TOP RIGHT
+========================================================= */
+
+.terminal-topbar-right {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  min-width: 0;
+}
+
+.terminal-session {
+  color: #566579;
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    monospace;
+
+  font-size: 8px;
+
+  white-space: nowrap;
+}
+
+.terminal-status {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  color: #7ddf9a;
+
+  font-size: 8px;
+  font-weight: 650;
+}
+
+.terminal-status-dot {
+  width: 6px;
+  height: 6px;
+
+  flex: 0 0 6px;
+
+  border-radius: 50%;
+
+  background: var(--terminal-green);
+
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.08),
+    0 0 9px rgba(34, 197, 94, 0.45);
+}
+
+/* =========================================================
+   ICON BUTTONS
+========================================================= */
+
+.terminal-icon-btn {
+  width: 25px;
+  height: 25px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #283548;
+  border-radius: 6px;
+
+  background: #101824;
+
+  color: #6e7d91;
+
+  font-size: 10px;
+
+  cursor: pointer;
+
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.terminal-icon-btn:hover:not(:disabled) {
+  color: #e5edf5;
+
+  background: #172230;
+
+  border-color: #3a4b62;
+
+  transform: translateY(-1px);
+}
+
+.terminal-icon-btn:disabled {
+  opacity: 0.35;
+
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.terminal-body {
+  flex: 1 1 auto;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: var(--terminal-bg);
+}
+
+/* =========================================================
+   INPUT HEADER
+========================================================= */
+
+.terminal-input-header,
+.terminal-output-header {
+  height: 27px;
+  min-height: 27px;
+
+  flex: 0 0 27px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 10px;
+
+  background: #0a1119;
+
+  border-bottom: 1px solid var(--terminal-border-soft);
+}
+
+.terminal-section-label {
+  color: #728096;
+
+  font-size: 8px;
+  font-weight: 850;
+
+  letter-spacing: 0.12em;
+}
+
+.terminal-section-hint {
+  color: #465468;
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    monospace;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   INPUT SHELL
+========================================================= */
+
+.terminal-input-shell {
+  min-height: 70px;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+
+  padding: 9px 11px;
+
+  border-bottom: 1px solid var(--terminal-border-soft);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(17, 25, 37, 0.86),
+      rgba(10, 15, 22, 0.92)
+    );
+}
+
+.terminal-prompt {
+  padding-top: 2px;
+
+  color: var(--terminal-green);
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    monospace;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  user-select: none;
+}
+
+.console-input {
+  flex: 1;
+
+  width: 100%;
+  min-width: 0;
+
+  min-height: 52px;
+  max-height: 90px;
+
+  resize: vertical;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: #cbd5e1;
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    Consolas,
+    monospace;
+
+  font-size: 11px;
+  line-height: 1.65;
+
+  caret-color: var(--terminal-purple);
+}
+
+.console-input::placeholder {
+  color: #3f4d60;
+}
+
+.console-input::selection {
+  background:
+    rgba(124, 58, 237, 0.3);
+}
+
+/* =========================================================
+   OUTPUT PANEL
+========================================================= */
+
+.terminal-output-panel {
+  flex: 1 1 auto;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: auto;
+
+  background:
+    linear-gradient(
+      180deg,
+      #080d14,
+      #070b11
+    );
+}
+
+.console-output {
+  min-width: max-content;
+
+  margin: 0;
+
+  padding: 11px 13px;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  color: #b9f6cc;
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    Consolas,
+    monospace;
+
+  font-size: 11px;
+  line-height: 1.7;
+
+  text-shadow:
+    0 0 10px rgba(34, 197, 94, 0.055);
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.terminal-empty {
+  width: 100%;
+  height: 100%;
+
+  min-height: 100px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+
+  text-align: center;
+}
+
+.terminal-empty-icon {
+  margin-bottom: 8px;
+
+  color: var(--terminal-purple);
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    monospace;
+
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.terminal-empty-title {
+  margin-bottom: 4px;
+
+  color: #aab7c7;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.terminal-empty-text {
+  max-width: 260px;
+
+  color: #536176;
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   TERMINAL SCROLLBAR
+========================================================= */
+
+.output-console * {
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    #2c3a4f
+    transparent;
+}
+
+.output-console *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.output-console *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.output-console *::-webkit-scrollbar-thumb {
+  background:
+    rgba(51, 65, 85, 0.9);
+
+  border-radius: 999px;
+}
+
+.output-console *::-webkit-scrollbar-thumb:hover {
+  background:
+    rgba(71, 85, 105, 0.95);
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.terminal-footer {
+  min-height: 23px;
+  height: 23px;
+
+  flex: 0 0 23px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 10px;
+
+  background: #0b1118;
+
+  border-top: 1px solid var(--terminal-border);
+
+  color: #536176;
+
+  font-family:
+    "JetBrains Mono",
+    "Fira Code",
+    monospace;
+
+  font-size: 7px;
+}
+
+.terminal-footer-left,
+.terminal-footer-right {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.terminal-footer-separator {
+  color: #2c394b;
+}
+
+.terminal-branch {
+  color: #7e8ca0;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+  .terminal-topbar {
+    padding: 0 7px;
+  }
+
+  .terminal-tab {
+    padding: 0 8px;
+
+    font-size: 9px;
+  }
+
+  .terminal-session {
+    display: none;
+  }
+
+  .terminal-topbar-right {
+    gap: 5px;
+  }
+
+  .terminal-icon-btn {
+    width: 23px;
+    height: 23px;
+  }
+
+  .terminal-input-shell {
+    min-height: 62px;
+
+    padding: 8px 9px;
+  }
+
+  .console-input {
+    min-height: 45px;
+
+    font-size: 10px;
+  }
+
+  .console-output {
+    padding: 9px 10px;
+
+    font-size: 10px;
+    line-height: 1.6;
+  }
+
+  .terminal-footer {
+    padding: 0 8px;
+  }
+
+  .terminal-footer-right {
+    display: none;
+  }
+}
+
+@media (max-width: 460px) {
+  .terminal-status {
+    display: none;
+  }
+
+  .terminal-tab {
+    padding: 0 7px;
+
+    gap: 5px;
+  }
+
+  .terminal-tab-icon {
+    font-size: 9px;
+  }
+
+  .terminal-section-label {
+    font-size: 7px;
+  }
+
+  .terminal-section-hint {
+    font-size: 7px;
+  }
+
+  .terminal-footer {
+    font-size: 6px;
+  }
+
+  .terminal-branch {
+    max-width: 70px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-icon-btn,
+  .terminal-tab {
+    transition: none;
+  }
 }
