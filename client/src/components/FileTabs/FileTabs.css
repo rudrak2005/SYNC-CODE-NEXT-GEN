@@ -1,0 +1,456 @@
+/* =========================================
+   SYNCCODE NEXTGEN FILE TABS
+========================================= */
+
+.file-tabs-shell {
+  position: relative;
+
+  width: 100%;
+  height: 42px;
+
+  display: flex;
+  align-items: stretch;
+
+  background:
+    linear-gradient(
+      180deg,
+      #111827,
+      #0f1625
+    );
+
+  border-bottom: 1px solid #252d40;
+
+  overflow: hidden;
+}
+
+
+/* =========================================
+   SCROLL AREA
+========================================= */
+
+.file-tabs-scroll {
+  flex: 1;
+  min-width: 0;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: #313a50 transparent;
+}
+
+.file-tabs-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+
+.file-tabs-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.file-tabs-scroll::-webkit-scrollbar-thumb {
+  background: #313a50;
+  border-radius: 999px;
+}
+
+
+/* =========================================
+   TABS CONTAINER
+========================================= */
+
+.file-tabs {
+  width: max-content;
+  min-width: 100%;
+
+  height: 100%;
+
+  display: flex;
+  align-items: stretch;
+}
+
+
+/* =========================================
+   SINGLE TAB
+========================================= */
+
+.file-tab {
+  position: relative;
+
+  min-width: 135px;
+  max-width: 220px;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 13px;
+
+  border: 0;
+  border-right: 1px solid rgba(148, 163, 184, 0.07);
+
+  background: transparent;
+
+  color: #64748b;
+
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.file-tab:hover {
+  color: #cbd5e1;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.015)
+    );
+}
+
+
+/* =========================================
+   ACTIVE TAB
+========================================= */
+
+.file-tab.active {
+  color: #f8fafc;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(124, 58, 237, 0.11),
+      rgba(124, 58, 237, 0.045)
+    );
+
+  box-shadow:
+    inset 0 1px 0 rgba(139, 92, 246, 0.12);
+}
+
+.file-tab.active::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(139, 92, 246, 0.6),
+      transparent
+    );
+}
+
+
+/* =========================================
+   FILE ICON
+========================================= */
+
+.file-tab-icon {
+  flex: 0 0 auto;
+
+  width: 21px;
+  height: 21px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 6px;
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 7px;
+  font-weight: 800;
+
+  letter-spacing: -0.3px;
+
+  color: #94a3b8;
+
+  background: rgba(148, 163, 184, 0.07);
+
+  border: 1px solid rgba(148, 163, 184, 0.08);
+
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.file-tab.active .file-tab-icon {
+  color: #ffffff;
+
+  background: rgba(124, 58, 237, 0.17);
+
+  border-color: rgba(124, 58, 237, 0.26);
+
+  box-shadow:
+    0 0 12px rgba(124, 58, 237, 0.12);
+}
+
+
+/* =========================================
+   FILE TYPE VARIANTS
+========================================= */
+
+.file-icon-javascript,
+.file-icon-typescript {
+  color: #eab308;
+}
+
+.file-icon-react {
+  color: #22d3ee;
+}
+
+.file-icon-html {
+  color: #f97316;
+}
+
+.file-icon-css {
+  color: #60a5fa;
+}
+
+.file-icon-json {
+  color: #facc15;
+}
+
+.file-icon-python {
+  color: #38bdf8;
+}
+
+.file-icon-cpp,
+.file-icon-c {
+  color: #818cf8;
+}
+
+.file-icon-java {
+  color: #fb7185;
+}
+
+.file-icon-rust {
+  color: #fb923c;
+}
+
+.file-icon-go {
+  color: #22d3ee;
+}
+
+.file-icon-php {
+  color: #a78bfa;
+}
+
+.file-icon-markdown {
+  color: #cbd5e1;
+}
+
+
+/* =========================================
+   FILE NAME
+========================================= */
+
+.file-tab-name {
+  min-width: 0;
+
+  flex: 1;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  text-align: left;
+
+  line-height: 1;
+}
+
+
+/* =========================================
+   UNSAVED INDICATOR
+========================================= */
+
+.file-tab-modified {
+  flex: 0 0 auto;
+
+  color: #f59e0b;
+
+  font-size: 15px;
+  line-height: 1;
+
+  transform: translateY(-1px);
+
+  text-shadow:
+    0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+
+/* =========================================
+   ACTIVE LINE
+========================================= */
+
+.file-tab-active-line {
+  position: absolute;
+
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+
+  height: 2px;
+
+  border-radius: 3px 3px 0 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      #7c3aed,
+      #06b6d4
+    );
+
+  box-shadow:
+    0 0 10px rgba(124, 58, 237, 0.35);
+
+  opacity: 0;
+
+  transform: scaleX(0.35);
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.file-tab-active-line.visible {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+
+/* =========================================
+   TAB END AREA
+========================================= */
+
+.file-tabs-end {
+  flex: 0 0 auto;
+
+  min-width: 70px;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(15, 22, 37, 0.45),
+      #0f1625
+    );
+
+  border-left: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.file-tabs-count {
+  padding: 4px 7px;
+
+  border-radius: 5px;
+
+  font-family: "JetBrains Mono", monospace;
+
+  font-size: 7px;
+  font-weight: 700;
+
+  letter-spacing: 0.4px;
+
+  color: #64748b;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(148, 163, 184, 0.07);
+}
+
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+
+.file-tabs:empty::after {
+  content: "No files open";
+
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+
+  padding-left: 15px;
+
+  font-family: "JetBrains Mono", monospace;
+
+  font-size: 9px;
+
+  color: #475569;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+  .file-tab {
+    min-width: 115px;
+
+    padding: 0 10px;
+  }
+
+  .file-tabs-end {
+    display: none;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .file-tab {
+    min-width: 105px;
+    gap: 6px;
+
+    padding: 0 9px;
+
+    font-size: 10px;
+  }
+
+  .file-tab-icon {
+    width: 19px;
+    height: 19px;
+
+    font-size: 6px;
+  }
+
+  .file-tab-active-line {
+    left: 8px;
+    right: 8px;
+  }
+}
+
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .file-tab,
+  .file-tab-icon,
+  .file-tab-active-line {
+    transition: none;
+  }
+}
