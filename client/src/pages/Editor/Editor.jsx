@@ -2667,11 +2667,10 @@ const handleRunCode = useCallback(async () => {
           <div className="version-drawer-content">
 
             <VersionHistory
-              versions={versions}
-              onRestore={
-                handleRestoreVersion
-              }
-            />
+  versions={versions}
+  onRestore={restoreVersion}
+  onClose={() => setVersionOpen(false)}
+/>
 
           </div>
 
