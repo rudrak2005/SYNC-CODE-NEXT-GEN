@@ -2235,25 +2235,20 @@ const handleRunCode = useCallback(async () => {
           <div className="synccode-monaco-wrapper">
 
             {currentFile ? (
-              <CodeEditor
-                value={
-                  currentFile.content ||
-                  ""
-                }
-                language={
-                  currentFile.language ||
-                  getLanguageFromFileName(
-                    activeFile
-                  ) ||
-                  "plaintext"
-                }
-                onChange={
-                  handleCodeChange
-                }
-                fileName={
-                  activeFile
-                }
-              />
+
+<CodeEditor
+  value={currentFile.content || ""}
+  language={
+    currentFile.language ||
+    getLanguageFromFileName(activeFile) ||
+    "plaintext"
+  }
+  onChange={handleCodeChange}
+  fileName={activeFile}
+  socket={socket}
+  user={user}
+/>
+        
             ) : (
               <div className="empty-editor">
                 <div className="empty-editor-icon">
