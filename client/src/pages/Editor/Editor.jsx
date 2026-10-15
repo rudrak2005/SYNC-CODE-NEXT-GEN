@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -236,6 +237,51 @@ function Editor() {
   });
 
   const [mobilePanel, setMobilePanel] = useState("editor");
+  const [explorerWidth, setExplorerWidth] = useState(224);
+  const [aiWidth, setAiWidth] = useState(315);
+  const [outputHeight, setOutputHeight] = useState(218);
+  const workspaceRef = useRef(null);
+  const dragRef = useRef({ type: null, startX: 0, startY: 0, startValue: 0 });
+
+  const startResize = useCallback((event, type, value) => {
+    if (window.matchMedia("(max-width: 700px)").matches) return;
+    event.preventDefault();
+    dragRef.current = {
+      type,
+      startX: event.clientX,
+      startY: event.clientY,
+      startValue: value,
+    };
+    document.body.classList.add("synccode-resizing");
+  }, []);
+
+  useEffect(() => {
+    const move = (event) => {
+      const drag = dragRef.current;
+      if (!drag.type) return;
+      if (drag.type === "explorer") {
+        setExplorerWidth(Math.max(170, Math.min(390, drag.startValue + event.clientX - drag.startX)));
+      } else if (drag.type === "ai") {
+        setAiWidth(Math.max(250, Math.min(470, drag.startValue - (event.clientX - drag.startX))));
+      } else if (drag.type === "output") {
+        const rect = workspaceRef.current?.getBoundingClientRect();
+        if (rect) setOutputHeight(Math.max(130, Math.min(rect.height * 0.65, rect.bottom - event.clientY)));
+      }
+    };
+    const stop = () => {
+      dragRef.current.type = null;
+      document.body.classList.remove("synccode-resizing");
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+      document.body.classList.remove("synccode-resizing");
+    };
+  }, []);
 
   const [activeAiTool, setActiveAiTool] = useState("assistant");
 
@@ -2154,6 +2200,10 @@ const handleRunCode = useCallback(async () => {
 
       {/* Main three-column IDE workspace */}
       <main
+        ref={workspaceRef}
+        style={{ gridTemplateColumns: aiOpen
+          ? `${explorerWidth}px 5px minmax(360px, 1fr) 5px ${aiWidth}px`
+          : `${explorerWidth}px 5px minmax(360px, 1fr)` }}
         className={`synccode-workspace ${aiOpen ? "ai-visible" : ""} ${mobilePanel === "explorer" ? "mobile-explorer" : ""} ${mobilePanel === "editor" ? "mobile-editor" : ""} ${mobilePanel === "ai" ? "mobile-ai" : ""}`}
       >
         {/* Left: files and collaborators */}
@@ -2189,6 +2239,8 @@ const handleRunCode = useCallback(async () => {
             )}
           </div>
         </aside>
+
+        <div className="synccode-resize-handle vertical" role="separator" aria-label="Resize file explorer" aria-orientation="vertical" onPointerDown={(event) => startResize(event, "explorer", explorerWidth)} />
 
         {/* Center: live code, run controls, output */}
         <section className={`synccode-editor-center ${mobilePanel === "editor" ? "mobile-panel-visible" : ""}`}>
@@ -2264,7 +2316,9 @@ const handleRunCode = useCallback(async () => {
           </div>
 
           {outputOpen ? (
-            <section className="synccode-output" aria-label="Code output and terminal">
+            <>
+            <div className="synccode-resize-handle horizontal" role="separator" aria-label="Resize output panel" aria-orientation="horizontal" onPointerDown={(event) => startResize(event, "output", outputHeight)} />
+            <section className="synccode-output" style={{ flexBasis: `${outputHeight}px`, height: `${outputHeight}px` }} aria-label="Code output and terminal">
               <div className="output-panel-heading">
                 <div className="output-panel-title">
                   <span className="terminal-symbol">›_</span>
@@ -2287,6 +2341,7 @@ const handleRunCode = useCallback(async () => {
                 <span className="terminal-shortcut">UTF-8 · LF</span>
               </div>
             </section>
+            </>
           ) : (
             <button type="button" className="show-output-btn" onClick={() => setOutputOpen(true)}>
               ↑ Show Output
@@ -2295,6 +2350,9 @@ const handleRunCode = useCallback(async () => {
         </section>
 
         {/* Right: AI and supporting developer features */}
+        {aiOpen && (
+          <div className="synccode-resize-handle vertical" role="separator" aria-label="Resize AI panel" aria-orientation="vertical" onPointerDown={(event) => startResize(event, "ai", aiWidth)} />
+        )}
         {aiOpen && (
           <aside className={`synccode-ai-sidebar ${mobilePanel === "ai" ? "mobile-panel-visible" : ""}`}>
             <div className="ai-panel-heading">
