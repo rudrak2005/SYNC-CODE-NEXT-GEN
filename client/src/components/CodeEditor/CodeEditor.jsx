@@ -654,8 +654,10 @@ function CodeEditor({
              */
             overviewRulerLanes: 2,
             glyphMargin: true,
-            lineNumbers: "on",
+            lineNumbers: (lineNumber) => String(lineNumber),
             lineNumbersMinChars: 3,
+            lineDecorationsWidth: 12,
+            glyphMargin: false,
             foldingMaximumRegions: 5000,
 
             /*
