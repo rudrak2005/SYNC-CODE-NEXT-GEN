@@ -453,3 +453,26 @@
 @media (prefers-reduced-motion: reduce) {
   .synccode-editor-page *, .synccode-editor-page *::before, .synccode-editor-page *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Mouse-resizable IDE panes — screenshot-inspired workspace */
+.synccode-workspace { grid-template-columns: 224px 5px minmax(360px, 1fr); }
+.synccode-workspace.ai-visible { grid-template-columns: 224px 5px minmax(360px, 1fr) 5px 315px; }
+.synccode-resize-handle { position: relative; z-index: 12; flex: 0 0 5px; min-width: 5px; min-height: 5px; background: #141d2a; touch-action: none; user-select: none; transition: background .15s ease; }
+.synccode-resize-handle.vertical { width: 5px; cursor: col-resize; border-left: 1px solid #1d2a3c; border-right: 1px solid #1d2a3c; }
+.synccode-resize-handle.horizontal { width: 100%; height: 5px; min-height: 5px; flex: 0 0 5px; cursor: row-resize; border-top: 1px solid #1d2a3c; border-bottom: 1px solid #1d2a3c; }
+.synccode-resize-handle:hover, .synccode-resize-handle:active { background: #6d5dfc; box-shadow: 0 0 0 1px rgba(109,93,252,.25); }
+.synccode-resize-handle.vertical::after { content: ""; position: absolute; left: 1px; right: 1px; top: 50%; height: 28px; transform: translateY(-50%); border-radius: 5px; background: #52627a; opacity: .6; }
+.synccode-resize-handle.horizontal::after { content: ""; position: absolute; top: 1px; bottom: 1px; left: 50%; width: 38px; transform: translateX(-50%); border-radius: 5px; background: #52627a; opacity: .65; }
+body.synccode-resizing, body.synccode-resizing * { cursor: col-resize !important; user-select: none !important; }
+body.synccode-resizing:has(.synccode-resize-handle.horizontal), body.synccode-resizing:has(.synccode-resize-handle.horizontal) * { cursor: row-resize !important; }
+.synccode-editor-center { min-width: 0; }
+.live-editor-area { min-height: 180px; }
+.synccode-output { min-height: 130px; }
+@media (max-width: 1100px) and (min-width: 701px) {
+  .synccode-workspace.ai-visible { grid-template-columns: 200px 5px minmax(320px, 1fr) 5px 275px; }
+}
+@media (max-width: 700px) {
+  .synccode-workspace, .synccode-workspace.ai-visible { display: block; }
+  .synccode-resize-handle { display: none !important; }
+  .live-editor-area { min-height: 120px; }
+}
