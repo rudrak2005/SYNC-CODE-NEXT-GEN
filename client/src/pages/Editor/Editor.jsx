@@ -92,20 +92,7 @@ import useProjectRecovery
 
 import "./Editor.css";
 
-import AIReviewPanel
-  from "../../components/AIReviewPanel/AIReviewPanel";
 
-import AIBugDetector
-  from "../../components/AIBugDetector/AIBugDetector";
-import AITestGenerator
-  from "../../components/AITestGenerator/AITestGenerator";
-
-import AIAgentPlanner
-  from "../../components/AIAgentPlanner/AIAgentPlanner";
-import AIAgentWorkflow
-  from "../../components/AIAgentWorkflow/AIAgentWorkflow";
-import AIDiffViewer
-  from "../../components/AIDiffViewer/AIDiffViewer";
 
 import { getExecutionPlan } from "../../lib/execution/executionManager.js";
 const initialFiles = {
